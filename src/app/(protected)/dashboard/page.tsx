@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import Link from "next/link";
+import { UsersIcon } from "lucide-react";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -18,11 +20,7 @@ export default function DashboardPage() {
         }
     }, [status, router]);
 
-    const handleSignOut = async () => {
-        await signOut({ redirect: false });
-        toast.success("Logged out successfully");
-        router.push("/login");
-    };
+
 
     if (status === "loading") {
         return (
@@ -36,14 +34,25 @@ export default function DashboardPage() {
         return null; // Will be redirected by useEffect
     }
 
+    // Check if user has admin role
+    const isAdmin = session.user.role === "admin";
+
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="p-6">
             <div className="max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold">DDS Portal Dashboard</h1>
-                    <Button onClick={handleSignOut} variant="outline">
-                        Sign Out
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        {isAdmin && (
+                            <Link href="/users">
+                                <Button variant="outline" className="flex items-center gap-2">
+                                    <UsersIcon className="h-4 w-4" />
+                                    Manage Users
+                                </Button>
+                            </Link>
+                        )}
+
+                    </div>
                 </div>
 
                 <Card className="mb-6">
@@ -54,7 +63,17 @@ export default function DashboardPage() {
                     <CardContent>
                         <div className="space-y-2">
                             <p><strong>Email:</strong> {session.user.email}</p>
-                            {session.user.role && <p><strong>Role:</strong> {session.user.role}</p>}
+                            {session.user.role && (
+                                <p>
+                                    <strong>Role:</strong>{" "}
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${session.user.role === "admin"
+                                        ? "bg-purple-100 text-purple-800"
+                                        : "bg-blue-100 text-blue-800"
+                                        }`}>
+                                        {session.user.role}
+                                    </span>
+                                </p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -80,6 +99,27 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {isAdmin && (
+                    <div className="mt-6">
+                        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-blue-100">
+                            <CardHeader>
+                                <CardTitle className="text-purple-800">Admin Actions</CardTitle>
+                                <CardDescription>Special actions available to administrators</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <Link href="/users" className="w-full">
+                                        <Button variant="outline" className="w-full justify-start border-purple-200 hover:bg-purple-50 hover:text-purple-800">
+                                            <UsersIcon className="h-4 w-4 mr-2 text-purple-600" />
+                                            User Management
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
             </div>
         </div>
     );
