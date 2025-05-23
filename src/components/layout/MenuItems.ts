@@ -76,7 +76,7 @@ export const MenuItems: MenuGroup[] = [
       },
       {
         label: "Invoices Types",
-        href: "/inv-types",
+        href: "/invoice-types",
         icon: SettingsIcon,
         title: "Configure invoice types and templates",
       },
