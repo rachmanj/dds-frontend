@@ -1,6 +1,15 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import api from "@/lib/axios";
+import axios from "axios";
+
+// Create a separate axios instance for auth to avoid circular dependencies
+const authApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+});
 
 const handler = NextAuth({
   providers: [
@@ -18,58 +27,28 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         try {
-          // Get CSRF token
-          await api.get("/sanctum/csrf-cookie");
-
-          // Attempt to log in
-          const response = await api.post("/api/login", {
+          // Use Laravel's token-based login endpoint
+          const response = await authApi.post("/api/token-login", {
             email: credentials?.email,
             password: credentials?.password,
           });
 
-          // If login was successful, return user data from the login response
           if (response.status === 200 && response.data) {
-            console.log("Login successful, user data:", response.data);
+            const { token, user } = response.data;
 
-            // Check if we have user data in the login response
-            if (response.data.user) {
+            if (token && user) {
               return {
-                id: response.data.user.id.toString(),
-                name: response.data.user.name,
-                email: response.data.user.email,
-                role: response.data.user.role || "user",
+                id: user.id.toString(),
+                name: user.name,
+                email: user.email,
+                role: user.role || "user",
+                accessToken: token, // Store the Sanctum token
               };
             }
-
-            // If no user data in login response, try to get it separately
-            try {
-              const userData = await api.get("/api/user");
-
-              if (userData.data && userData.data.user) {
-                return {
-                  id: userData.data.user.id.toString(),
-                  name: userData.data.user.name,
-                  email: userData.data.user.email,
-                  role: userData.data.user.role || "user",
-                };
-              }
-            } catch (userError) {
-              console.error("Error fetching user data:", userError);
-              // Continue with minimal user info if we can't get full details
-            }
-
-            // Fallback with minimal user info from credentials
-            return {
-              id: "1", // Fallback ID
-              name: credentials?.email?.split("@")[0] || "User", // Use email username as name
-              email: credentials?.email || "",
-              role: "user",
-            };
           }
 
           return null;
-        } catch (error) {
-          console.error("Authentication error:", error);
+        } catch {
           return null;
         }
       },
@@ -81,20 +60,24 @@ const handler = NextAuth({
   },
   callbacks: {
     async session({ session, token }) {
-      // Add the user's ID and role to the session
+      // Add the user's ID, role, and access token to the session
       if (token.sub) {
         session.user.id = token.sub;
       }
       if (token.role) {
         session.user.role = token.role;
       }
+      if (token.accessToken) {
+        session.accessToken = token.accessToken;
+      }
       return session;
     },
     async jwt({ token, user }) {
-      // Persist the user's ID and role to the token
+      // Persist the user's ID, role, and access token to the token
       if (user) {
         token.sub = user.id;
         token.role = user.role;
+        token.accessToken = user.accessToken;
       }
       return token;
     },
@@ -103,7 +86,7 @@ const handler = NextAuth({
     signIn: "/login",
     error: "/login",
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: false,
 });
 
 export { handler as GET, handler as POST };

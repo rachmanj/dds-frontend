@@ -1,29 +1,29 @@
 import axios from "axios";
+import { getSession } from "next-auth/react";
 
 // Get backend URL from environment variable or use default
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
-// Create a custom axios instance with proper CORS handling
+// Create a custom axios instance with token-based authentication
 const api = axios.create({
   baseURL: BACKEND_URL,
-  withCredentials: true, // Important for sending cookies
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    "X-Requested-With": "XMLHttpRequest",
   },
 });
 
-// Add request interceptor for debugging
+// Add request interceptor to include Bearer token
 api.interceptors.request.use(
-  (config) => {
-    if (
-      typeof window !== "undefined" &&
-      process.env.NODE_ENV === "development"
-    ) {
-      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+  async (config) => {
+    // Get the current session
+    const session = await getSession();
+
+    if (session?.accessToken) {
+      config.headers.Authorization = `Bearer ${session.accessToken}`;
     }
+
     return config;
   },
   (error) => {
@@ -31,24 +31,20 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for debugging
+// Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    if (
-      typeof window !== "undefined" &&
-      process.env.NODE_ENV === "development"
-    ) {
-      console.log(`API Response: ${response.status}`, response.data);
-    }
     return response;
   },
   (error) => {
-    if (
-      typeof window !== "undefined" &&
-      process.env.NODE_ENV === "development"
-    ) {
-      console.error("API Error:", error.response?.status, error.response?.data);
+    // Handle 401 errors by redirecting to login
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      // Only redirect if we're not already on the login page
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
     }
+
     return Promise.reject(error);
   }
 );
