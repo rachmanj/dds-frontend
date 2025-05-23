@@ -76,7 +76,7 @@ const LoginForm = () => {
                         </svg>
                     </div>
                 </div>
-                <CardTitle className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">Login to DDS Portal</CardTitle>
+                <CardTitle className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">Login</CardTitle>
                 <CardDescription className="text-center text-zinc-400">
                     Enter your credentials to access your account
                 </CardDescription>
@@ -136,15 +136,7 @@ const LoginForm = () => {
                 </form>
             </CardContent>
             <CardFooter className="flex flex-col gap-2 items-center text-zinc-400 pt-0">
-                <p className="text-sm">
-                    Secured with Laravel Sanctum API
-                </p>
-                <div className="text-xs flex items-center gap-1">
-                    <span>Demo credentials:</span>
-                    <code className="px-1 py-0.5 rounded bg-zinc-800">dadsdevteam@example.com</code>
-                    <span>/</span>
-                    <code className="px-1 py-0.5 rounded bg-zinc-800">dds2024</code>
-                </div>
+                <p className="text-sm"> A Document Distribution System</p>
             </CardFooter>
         </Card>
     );

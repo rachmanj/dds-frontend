@@ -1,9 +1,9 @@
 "use client"
 
-import Link from 'next/link'
 import React from 'react'
 import { LogOut, Settings, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -25,11 +25,34 @@ import { SidebarTrigger } from '../ui/sidebar'
 const Navbar = () => {
     const router = useRouter();
     const { setTheme } = useTheme();
+    const { data: session } = useSession();
 
     const handleSignOut = async () => {
         await signOut({ redirect: false });
         toast.success("Logged out successfully");
         router.push("/login");
+    };
+
+    // Get user's name or fallback to email or "User"
+    const getUserDisplayName = () => {
+        if (session?.user?.name) {
+            return session.user.name;
+        }
+        if (session?.user?.email) {
+            return session.user.email.split('@')[0]; // Use email username part
+        }
+        return "User";
+    };
+
+    // Get user's initials for avatar fallback
+    const getUserInitials = () => {
+        const name = getUserDisplayName();
+        return name
+            .split(' ')
+            .map(word => word.charAt(0))
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
     };
 
     return (
@@ -38,7 +61,9 @@ const Navbar = () => {
             <SidebarTrigger />
             {/* RIGHT */}
             <div className="flex items-center gap-4">
-                <Link href="/dashboard">Dashboard</Link>
+                <span className="text-sm font-medium text-muted-foreground">
+                    Welcome, {getUserDisplayName()}
+                </span>
                 {/* THEME MENU */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -64,8 +89,8 @@ const Navbar = () => {
                 {/* USER MENU */}
                 <DropdownMenu>
                     <DropdownMenuTrigger><Avatar>
-                        <AvatarImage src="https://github.com/shadcn.png" />
-                        <AvatarFallback>CN</AvatarFallback>
+                        <AvatarImage src={session?.user?.image || "https://github.com/shadcn.png"} />
+                        <AvatarFallback>{getUserInitials()}</AvatarFallback>
                     </Avatar></DropdownMenuTrigger>
                     <DropdownMenuContent sideOffset={10}>
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
