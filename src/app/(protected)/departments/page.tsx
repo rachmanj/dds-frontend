@@ -352,6 +352,7 @@ export default function DepartmentsPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>No.</TableHead>
                                     <TableHead>Department Name</TableHead>
                                     <TableHead>Project</TableHead>
                                     <TableHead>Location Code</TableHead>
@@ -364,13 +365,16 @@ export default function DepartmentsPage() {
                             <TableBody>
                                 {filteredDepartments.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-8">
+                                        <TableCell colSpan={8} className="text-center py-8">
                                             {searchTerm ? "No departments found matching your search." : "No departments found. Create your first department!"}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredDepartments.map((department) => (
+                                    filteredDepartments.map((department, index) => (
                                         <TableRow key={department.id}>
+                                            <TableCell>
+                                                <Badge variant="secondary">{index + 1}</Badge>
+                                            </TableCell>
                                             <TableCell className="font-medium">
                                                 {department.name}
                                             </TableCell>

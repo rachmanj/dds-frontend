@@ -30,6 +30,7 @@ import { Plus, Edit, Trash2, Search, AlertCircle, LogIn, FileText } from "lucide
 import { toast, Toaster } from "sonner";
 import { AdditionalDocumentType, AdditionalDocumentTypeFormData } from "@/types/additional-document-type";
 import { useAdditionalDocumentTypes } from "@/hooks/useAdditionalDocumentTypes";
+import React from "react";
 
 export default function AdditionalDocumentTypesPage() {
     const { status } = useSession();
@@ -110,7 +111,7 @@ export default function AdditionalDocumentTypesPage() {
     const handleEdit = (type: AdditionalDocumentType) => {
         setEditingType(type);
         setFormData({
-            type_name: type.type_name,
+            type_name: type.type_name || "",
         });
         setIsEditDialogOpen(true);
     };
@@ -122,9 +123,19 @@ export default function AdditionalDocumentTypesPage() {
     };
 
     // Filter document types based on search term
-    const filteredDocumentTypes = additionalDocumentTypes.filter(type =>
-        type.type_name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredDocumentTypes = React.useMemo(() => {
+        if (!additionalDocumentTypes || !Array.isArray(additionalDocumentTypes)) {
+            return [];
+        }
+
+        const search = (searchTerm || "").toLowerCase().trim();
+
+        return additionalDocumentTypes.filter(type => {
+            if (!type || typeof type !== 'object') return false;
+            const typeName = type.type_name || "";
+            return typeName.toLowerCase().includes(search);
+        });
+    }, [additionalDocumentTypes, searchTerm]);
 
     // Show loading state while checking authentication
     if (status === "loading") {
@@ -282,6 +293,7 @@ export default function AdditionalDocumentTypesPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>No.</TableHead>
                                     <TableHead>ID</TableHead>
                                     <TableHead>Type Name</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
@@ -290,13 +302,16 @@ export default function AdditionalDocumentTypesPage() {
                             <TableBody>
                                 {filteredDocumentTypes.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center py-8">
+                                        <TableCell colSpan={4} className="text-center py-8">
                                             {searchTerm ? "No document types found matching your search." : "No document types found. Create your first document type!"}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredDocumentTypes.map((type) => (
+                                    filteredDocumentTypes.map((type, index) => (
                                         <TableRow key={type.id}>
+                                            <TableCell>
+                                                <Badge variant="secondary">{index + 1}</Badge>
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline">{type.id}</Badge>
                                             </TableCell>

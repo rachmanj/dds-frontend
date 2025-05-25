@@ -282,6 +282,7 @@ export default function InvoiceTypesPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>No.</TableHead>
                                     <TableHead>ID</TableHead>
                                     <TableHead>Type Name</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
@@ -290,13 +291,16 @@ export default function InvoiceTypesPage() {
                             <TableBody>
                                 {filteredInvoiceTypes.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center py-8">
+                                        <TableCell colSpan={4} className="text-center py-8">
                                             {searchTerm ? "No invoice types found matching your search." : "No invoice types found. Create your first invoice type!"}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredInvoiceTypes.map((type) => (
+                                    filteredInvoiceTypes.map((type, index) => (
                                         <TableRow key={type.id}>
+                                            <TableCell>
+                                                <Badge variant="secondary">{index + 1}</Badge>
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline">{type.id}</Badge>
                                             </TableCell>

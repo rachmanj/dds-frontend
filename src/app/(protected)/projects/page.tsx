@@ -305,6 +305,7 @@ export default function ProjectsPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>No.</TableHead>
                                     <TableHead>Code</TableHead>
                                     <TableHead>Owner</TableHead>
                                     <TableHead>Location</TableHead>
@@ -315,13 +316,16 @@ export default function ProjectsPage() {
                             <TableBody>
                                 {filteredProjects.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-8">
+                                        <TableCell colSpan={6} className="text-center py-8">
                                             {searchTerm ? "No projects found matching your search." : "No projects found. Create your first project!"}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredProjects.map((project) => (
+                                    filteredProjects.map((project, index) => (
                                         <TableRow key={project.id}>
+                                            <TableCell>
+                                                <Badge variant="secondary">{index + 1}</Badge>
+                                            </TableCell>
                                             <TableCell className="font-medium">
                                                 <Badge variant="outline">{project.code}</Badge>
                                             </TableCell>

@@ -1,6 +1,5 @@
 import React from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 
 import {
@@ -29,10 +28,7 @@ const AppSidebar = () => {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuButton asChild>
-                        <Link href="/dashboard">
-                            <Image src="/dds-logo.png" alt="DDS" width={30} height={30} />
-                            <span>DD System</span>
-                        </Link>
+                        <Link href="/dashboard">Document Distributio System</Link>
                     </SidebarMenuButton>
                 </SidebarMenu>
             </SidebarHeader>
