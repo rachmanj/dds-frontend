@@ -42,13 +42,13 @@ export const MenuItems: MenuGroup[] = [
     items: [
       {
         label: "Invoices",
-        href: "/documents/invoices",
+        href: "/invoices",
         icon: FileCheck2,
         title: "Manage and view all invoices",
       },
       {
         label: "Additional Documents",
-        href: "/documents/additional",
+        href: "/additional-documents",
         icon: Files,
         title: "Manage additional documents and files",
       },
