@@ -89,7 +89,7 @@ const Navbar = () => {
                 {/* USER MENU */}
                 <DropdownMenu>
                     <DropdownMenuTrigger><Avatar>
-                        <AvatarImage src={session?.user?.image || "https://github.com/shadcn.png"} />
+                        <AvatarImage src={session?.user?.image ?? undefined} />
                         <AvatarFallback>{getUserInitials()}</AvatarFallback>
                     </Avatar></DropdownMenuTrigger>
                     <DropdownMenuContent sideOffset={10}>

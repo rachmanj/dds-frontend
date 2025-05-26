@@ -35,7 +35,6 @@ export interface AdditionalDocumentFormData {
   document_number: string;
   document_date: string;
   po_no?: string;
-  project?: string;
   receive_date?: string;
   remarks?: string;
   cur_loc?: string;

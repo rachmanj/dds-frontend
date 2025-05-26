@@ -257,6 +257,53 @@ export function useInvoices() {
 
   const clearError = () => setError(null);
 
+  // Validate invoice number for uniqueness per supplier
+  const validateInvoiceNumber = async (
+    invoiceNumber: string,
+    supplierId: number,
+    invoiceId?: number
+  ): Promise<{ valid: boolean; message: string }> => {
+    if (status !== "authenticated") {
+      return {
+        valid: false,
+        message: "You must be logged in to validate invoice numbers",
+      };
+    }
+
+    if (!session?.accessToken) {
+      return {
+        valid: false,
+        message: "No access token found. Please log in again.",
+      };
+    }
+
+    if (!invoiceNumber.trim() || !supplierId) {
+      return {
+        valid: false,
+        message: "Invoice number and supplier are required",
+      };
+    }
+
+    try {
+      const response = await api.post("/api/invoices/validate-number", {
+        invoice_number: invoiceNumber,
+        supplier_id: supplierId,
+        invoice_id: invoiceId,
+      });
+
+      return {
+        valid: response.data.valid,
+        message: response.data.message,
+      };
+    } catch (error: unknown) {
+      console.error("Error validating invoice number:", error);
+      return {
+        valid: false,
+        message: "Failed to validate invoice number",
+      };
+    }
+  };
+
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
@@ -269,6 +316,7 @@ export function useInvoices() {
     createInvoice,
     updateInvoice,
     deleteInvoice,
+    validateInvoiceNumber,
     clearError,
     isAuthenticated: status === "authenticated" && !!session?.accessToken,
     sessionEstablished: status === "authenticated" && !!session?.accessToken,
