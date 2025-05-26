@@ -28,6 +28,21 @@ export interface AdditionalDocument {
     name: string;
     email: string;
   };
+  invoices?: {
+    id: number;
+    invoice_number: string;
+    amount: number;
+    currency: string;
+    status: string;
+    supplier?: {
+      id: number;
+      name: string;
+      sap_code?: string;
+      type: "vendor" | "customer";
+      city?: string;
+      payment_project: string;
+    };
+  }[];
 }
 
 export interface AdditionalDocumentFormData {

@@ -32,6 +32,15 @@ export interface Invoice {
     id: number;
     name: string;
   };
+  additional_documents?: {
+    id: number;
+    document_number: string;
+    document_date: string;
+    type?: {
+      id: number;
+      type_name: string;
+    };
+  }[];
   duration1?: number;
   duration2?: number;
   sap_doc?: string;
