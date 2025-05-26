@@ -1,5 +1,4 @@
 import {
-  Files,
   FileCheck2,
   LayoutDashboard,
   Truck,
@@ -38,19 +37,36 @@ export const MenuItems: MenuGroup[] = [
     ],
   },
   {
-    GroupLabel: "Documents",
+    GroupLabel: "Invoices",
     items: [
       {
-        label: "Invoices",
+        label: "Dashboard",
+        href: "/invoice/dashboard",
+        icon: LayoutDashboard,
+        title: "View main dashboard with overview and statistics",
+      },
+      {
+        label: "Invoices List",
         href: "/invoices",
         icon: FileCheck2,
         title: "Manage and view all invoices",
       },
+    ],
+  },
+  {
+    GroupLabel: "Additional Documents",
+    items: [
       {
-        label: "Additional Documents",
+        label: "Dashboard",
+        href: "/additional-documents/dashboard",
+        icon: LayoutDashboard,
+        title: "View main dashboard with overview and statistics",
+      },
+      {
+        label: "List",
         href: "/additional-documents",
-        icon: Files,
-        title: "Manage additional documents and files",
+        icon: FileCheck2,
+        title: "Manage and view all additional documents",
       },
     ],
   },

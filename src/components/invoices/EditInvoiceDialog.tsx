@@ -1,19 +1,19 @@
 "use client";
 
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,452 +26,525 @@ import { Department } from "@/types/department";
 import { Project } from "@/types/project";
 
 interface EditInvoiceDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    editingInvoice: Invoice | null;
-    formData: InvoiceFormData;
-    setFormData: (data: InvoiceFormData) => void;
-    onSubmit: () => void;
-    submitting: boolean;
-    validationErrors: Record<string, string>;
-    suppliers: Supplier[];
-    invoiceTypes: InvoiceType[];
-    departments: Department[];
-    projects: Project[];
-    filteredSuppliers: Supplier[];
-    filteredInvoiceTypes: InvoiceType[];
-    filteredDepartments: Department[];
-    filteredProjects: Project[];
-    filteredReceiveProjects: Project[];
-    filteredInvoiceProjects: Project[];
-    supplierSearchTerm: string;
-    setSupplierSearchTerm: (term: string) => void;
-    typeSearchTerm: string;
-    setTypeSearchTerm: (term: string) => void;
-    departmentSearchTerm: string;
-    setDepartmentSearchTerm: (term: string) => void;
-    projectSearchTerm: string;
-    setProjectSearchTerm: (term: string) => void;
-    receiveProjectSearchTerm: string;
-    setReceiveProjectSearchTerm: (term: string) => void;
-    invoiceProjectSearchTerm: string;
-    setInvoiceProjectSearchTerm: (term: string) => void;
-    handleSupplierChange: (supplierId: string) => void;
-    handleInvoiceNumberChange: (invoiceNumber: string) => void;
-    handleInvoiceNumberBlur: (invoiceNumber: string) => void;
-    handleAmountChange: (value: string) => void;
-    formatNumberWithCommas: (value: string) => string;
-    getSupplierOptionDisplay: (supplier: Supplier) => string;
-    getDepartmentOptionDisplay: (department: Department) => string;
-    getProjectOptionDisplay: (project: Project) => string;
-    resetForm: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editingInvoice: Invoice | null;
+  formData: InvoiceFormData;
+  setFormData: (data: InvoiceFormData) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+  validationErrors: Record<string, string>;
+  suppliers: Supplier[];
+  invoiceTypes: InvoiceType[];
+  departments: Department[];
+  projects: Project[];
+  filteredSuppliers: Supplier[];
+  filteredInvoiceTypes: InvoiceType[];
+  filteredDepartments: Department[];
+  filteredProjects: Project[];
+  filteredReceiveProjects: Project[];
+  filteredInvoiceProjects: Project[];
+  supplierSearchTerm: string;
+  setSupplierSearchTerm: (term: string) => void;
+  typeSearchTerm: string;
+  setTypeSearchTerm: (term: string) => void;
+  departmentSearchTerm: string;
+  setDepartmentSearchTerm: (term: string) => void;
+  projectSearchTerm: string;
+  setProjectSearchTerm: (term: string) => void;
+  receiveProjectSearchTerm: string;
+  setReceiveProjectSearchTerm: (term: string) => void;
+  invoiceProjectSearchTerm: string;
+  setInvoiceProjectSearchTerm: (term: string) => void;
+  handleSupplierChange: (supplierId: string) => void;
+  handleInvoiceNumberChange: (invoiceNumber: string) => void;
+  handleInvoiceNumberBlur: (invoiceNumber: string) => void;
+  handleAmountChange: (value: string) => void;
+  formatNumberWithCommas: (value: string) => string;
+  getSupplierOptionDisplay: (supplier: Supplier) => string;
+  getDepartmentOptionDisplay: (department: Department) => string;
+  getProjectOptionDisplay: (project: Project) => string;
+  resetForm: () => void;
 }
 
 export function EditInvoiceDialog({
-    open,
-    onOpenChange,
-    editingInvoice,
-    formData,
-    setFormData,
-    onSubmit,
-    submitting,
-    validationErrors,
-    filteredSuppliers,
-    filteredInvoiceTypes,
-    filteredDepartments,
-    filteredProjects,
-    filteredReceiveProjects,
-    filteredInvoiceProjects,
-    supplierSearchTerm,
-    setSupplierSearchTerm,
-    typeSearchTerm,
-    setTypeSearchTerm,
-    departmentSearchTerm,
-    setDepartmentSearchTerm,
-    projectSearchTerm,
-    setProjectSearchTerm,
-    receiveProjectSearchTerm,
-    setReceiveProjectSearchTerm,
-    invoiceProjectSearchTerm,
-    setInvoiceProjectSearchTerm,
-    handleSupplierChange,
-    handleInvoiceNumberChange,
-    handleInvoiceNumberBlur,
-    handleAmountChange,
-    formatNumberWithCommas,
-    getSupplierOptionDisplay,
-    getDepartmentOptionDisplay,
-    getProjectOptionDisplay,
-    resetForm,
+  open,
+  onOpenChange,
+  editingInvoice,
+  formData,
+  setFormData,
+  onSubmit,
+  submitting,
+  validationErrors,
+  filteredSuppliers,
+  filteredInvoiceTypes,
+  filteredDepartments,
+  filteredProjects,
+  filteredReceiveProjects,
+  filteredInvoiceProjects,
+  supplierSearchTerm,
+  setSupplierSearchTerm,
+  typeSearchTerm,
+  setTypeSearchTerm,
+  departmentSearchTerm,
+  setDepartmentSearchTerm,
+  projectSearchTerm,
+  setProjectSearchTerm,
+  receiveProjectSearchTerm,
+  setReceiveProjectSearchTerm,
+  invoiceProjectSearchTerm,
+  setInvoiceProjectSearchTerm,
+  handleSupplierChange,
+  handleInvoiceNumberChange,
+  handleInvoiceNumberBlur,
+  handleAmountChange,
+  formatNumberWithCommas,
+  getSupplierOptionDisplay,
+  getDepartmentOptionDisplay,
+  getProjectOptionDisplay,
+  resetForm,
 }: EditInvoiceDialogProps) {
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-8xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Edit Invoice</DialogTitle>
-                    <DialogDescription>
-                        Update the invoice details.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-6 py-6">
-                    {/* Basic Information Section */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-supplier_id">Supplier *</Label>
-                                <Select
-                                    key={`edit-supplier-${editingInvoice?.id || 'new'}`}
-                                    value={formData.supplier_id ? formData.supplier_id.toString() : ""}
-                                    onValueChange={handleSupplierChange}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select supplier" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <div className="p-2 border-b">
-                                            <Input
-                                                placeholder="Search suppliers..."
-                                                value={supplierSearchTerm}
-                                                onChange={(e) => setSupplierSearchTerm(e.target.value)}
-                                                className="h-8"
-                                            />
-                                        </div>
-                                        <div className="max-h-[200px] overflow-y-auto">
-                                            {filteredSuppliers.length === 0 ? (
-                                                <div className="p-2 text-sm text-muted-foreground text-center">
-                                                    No suppliers found
-                                                </div>
-                                            ) : (
-                                                filteredSuppliers.map((supplier) => (
-                                                    <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                                                        {getSupplierOptionDisplay(supplier)}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-invoice_number">Invoice Number *</Label>
-                                <Input
-                                    id="edit-invoice_number"
-                                    value={formData.invoice_number}
-                                    onChange={(e) => handleInvoiceNumberChange(e.target.value)}
-                                    onBlur={(e) => handleInvoiceNumberBlur(e.target.value)}
-                                    placeholder="Enter invoice number"
-                                    className={validationErrors.invoice_number ? "border-red-500" : ""}
-                                />
-                                {validationErrors.invoice_number && (
-                                    <p className="text-sm text-red-500">{validationErrors.invoice_number}</p>
-                                )}
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-type_id">Invoice Type *</Label>
-                                <Select
-                                    key={`edit-type-${editingInvoice?.id || 'new'}`}
-                                    value={formData.type_id ? formData.type_id.toString() : ""}
-                                    onValueChange={(value) =>
-                                        setFormData({ ...formData, type_id: parseInt(value) })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select invoice type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <div className="p-2 border-b">
-                                            <Input
-                                                placeholder="Search invoice types..."
-                                                value={typeSearchTerm}
-                                                onChange={(e) => setTypeSearchTerm(e.target.value)}
-                                                className="h-8"
-                                            />
-                                        </div>
-                                        <div className="max-h-[200px] overflow-y-auto">
-                                            {filteredInvoiceTypes.length === 0 ? (
-                                                <div className="p-2 text-sm text-muted-foreground text-center">
-                                                    No invoice types found
-                                                </div>
-                                            ) : (
-                                                filteredInvoiceTypes.map((type) => (
-                                                    <SelectItem key={type.id} value={type.id.toString()}>
-                                                        {type.type_name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-full max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Invoice</DialogTitle>
+          <DialogDescription>Update the invoice details.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 py-6">
+          {/* Basic Information Section */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-supplier_id">Supplier *</Label>
+                <Select
+                  key={`edit-supplier-${editingInvoice?.id || "new"}`}
+                  value={
+                    formData.supplier_id ? formData.supplier_id.toString() : ""
+                  }
+                  onValueChange={handleSupplierChange}
+                >
+                  <SelectTrigger
+                    className={
+                      validationErrors.supplier_id ? "border-red-500" : ""
+                    }
+                  >
+                    <SelectValue placeholder="Select supplier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2 border-b">
+                      <Input
+                        placeholder="Search suppliers..."
+                        value={supplierSearchTerm}
+                        onChange={(e) => setSupplierSearchTerm(e.target.value)}
+                        className="h-8"
+                      />
                     </div>
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredSuppliers.length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          No suppliers found
+                        </div>
+                      ) : (
+                        filteredSuppliers.map((supplier) => (
+                          <SelectItem
+                            key={supplier.id}
+                            value={supplier.id.toString()}
+                          >
+                            {getSupplierOptionDisplay(supplier)}
+                          </SelectItem>
+                        ))
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+                {validationErrors.supplier_id && (
+                  <p className="text-sm text-red-500">
+                    {validationErrors.supplier_id}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-invoice_number">Invoice Number *</Label>
+                <Input
+                  id="edit-invoice_number"
+                  value={formData.invoice_number}
+                  onChange={(e) => handleInvoiceNumberChange(e.target.value)}
+                  onBlur={(e) => handleInvoiceNumberBlur(e.target.value)}
+                  placeholder="Enter invoice number"
+                  className={
+                    validationErrors.invoice_number ? "border-red-500" : ""
+                  }
+                />
+                {validationErrors.invoice_number && (
+                  <p className="text-sm text-red-500">
+                    {validationErrors.invoice_number}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-type_id">Invoice Type *</Label>
+                <Select
+                  key={`edit-type-${editingInvoice?.id || "new"}`}
+                  value={formData.type_id ? formData.type_id.toString() : ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, type_id: parseInt(value) })
+                  }
+                >
+                  <SelectTrigger
+                    className={validationErrors.type_id ? "border-red-500" : ""}
+                  >
+                    <SelectValue placeholder="Select invoice type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2 border-b">
+                      <Input
+                        placeholder="Search invoice types..."
+                        value={typeSearchTerm}
+                        onChange={(e) => setTypeSearchTerm(e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredInvoiceTypes.length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          No invoice types found
+                        </div>
+                      ) : (
+                        filteredInvoiceTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id.toString()}>
+                            {type.type_name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+                {validationErrors.type_id && (
+                  <p className="text-sm text-red-500">
+                    {validationErrors.type_id}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
 
-                    {/* Dates and PO Section */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-invoice_date">Invoice Date *</Label>
-                                <Input
-                                    id="edit-invoice_date"
-                                    type="date"
-                                    value={formData.invoice_date}
-                                    onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-receive_date">Receive Date *</Label>
-                                <Input
-                                    id="edit-receive_date"
-                                    type="date"
-                                    value={formData.receive_date}
-                                    onChange={(e) => setFormData({ ...formData, receive_date: e.target.value })}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-po_no">PO Number</Label>
-                                <Input
-                                    id="edit-po_no"
-                                    value={formData.po_no}
-                                    onChange={(e) => setFormData({ ...formData, po_no: e.target.value })}
-                                    placeholder="Enter PO number"
-                                />
-                            </div>
-                        </div>
-                    </div>
+          {/* Dates and PO Section */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-invoice_date">Invoice Date *</Label>
+                <Input
+                  id="edit-invoice_date"
+                  type="date"
+                  value={formData.invoice_date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, invoice_date: e.target.value })
+                  }
+                  className={
+                    validationErrors.invoice_date ? "border-red-500" : ""
+                  }
+                />
+                {validationErrors.invoice_date && (
+                  <p className="text-sm text-red-500">
+                    {validationErrors.invoice_date}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-receive_date">Receive Date *</Label>
+                <Input
+                  id="edit-receive_date"
+                  type="date"
+                  value={formData.receive_date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, receive_date: e.target.value })
+                  }
+                  className={
+                    validationErrors.receive_date ? "border-red-500" : ""
+                  }
+                />
+                {validationErrors.receive_date && (
+                  <p className="text-sm text-red-500">
+                    {validationErrors.receive_date}
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-po_no">PO Number</Label>
+                <Input
+                  id="edit-po_no"
+                  value={formData.po_no}
+                  onChange={(e) =>
+                    setFormData({ ...formData, po_no: e.target.value })
+                  }
+                  placeholder="Enter PO number"
+                />
+              </div>
+            </div>
+          </div>
 
-                    {/* Amount Section */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-currency">Currency *</Label>
-                                <Select
-                                    value={formData.currency}
-                                    onValueChange={(value) =>
-                                        setFormData({ ...formData, currency: value })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select currency" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="IDR">IDR</SelectItem>
-                                        <SelectItem value="USD">USD</SelectItem>
-                                        <SelectItem value="EUR">EUR</SelectItem>
-                                        <SelectItem value="SGD">SGD</SelectItem>
-                                        <SelectItem value="JPY">JPY</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2 col-span-2">
-                                <Label htmlFor="edit-amount">Amount *</Label>
-                                <Input
-                                    id="edit-amount"
-                                    type="text"
-                                    value={formatNumberWithCommas(formData.amount.toString())}
-                                    onChange={(e) => handleAmountChange(e.target.value)}
-                                    placeholder="Enter amount"
-                                />
-                            </div>
-                        </div>
-                    </div>
+          {/* Amount Section */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-currency">Currency *</Label>
+                <Select
+                  value={formData.currency}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, currency: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IDR">IDR</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="SGD">SGD</SelectItem>
+                    <SelectItem value="JPY">JPY</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2 col-span-2">
+                <Label htmlFor="edit-amount">Amount *</Label>
+                <Input
+                  id="edit-amount"
+                  type="text"
+                  value={formatNumberWithCommas(formData.amount.toString())}
+                  onChange={(e) => handleAmountChange(e.target.value)}
+                  placeholder="Enter amount"
+                  className={validationErrors.amount ? "border-red-500" : ""}
+                />
+                {validationErrors.amount && (
+                  <p className="text-sm text-red-500">
+                    {validationErrors.amount}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
 
-                    {/* Project Information Section */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-receive_project">Receive Project</Label>
-                                <Select
-                                    key={`edit-receive-project-${editingInvoice?.id || 'new'}`}
-                                    value={formData.receive_project || ""}
-                                    onValueChange={(value) =>
-                                        setFormData({ ...formData, receive_project: value })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select receive project" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <div className="p-2 border-b">
-                                            <Input
-                                                placeholder="Search projects..."
-                                                value={receiveProjectSearchTerm}
-                                                onChange={(e) => setReceiveProjectSearchTerm(e.target.value)}
-                                                className="h-8"
-                                            />
-                                        </div>
-                                        <div className="max-h-[200px] overflow-y-auto">
-                                            {filteredReceiveProjects.length === 0 ? (
-                                                <div className="p-2 text-sm text-muted-foreground text-center">
-                                                    No projects found
-                                                </div>
-                                            ) : (
-                                                filteredReceiveProjects.map((project) => (
-                                                    <SelectItem key={project.id} value={project.code}>
-                                                        {getProjectOptionDisplay(project)}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-invoice_project">Invoice Project</Label>
-                                <Select
-                                    key={`edit-invoice-project-${editingInvoice?.id || 'new'}`}
-                                    value={formData.invoice_project || ""}
-                                    onValueChange={(value) =>
-                                        setFormData({ ...formData, invoice_project: value })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select invoice project" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <div className="p-2 border-b">
-                                            <Input
-                                                placeholder="Search projects..."
-                                                value={invoiceProjectSearchTerm}
-                                                onChange={(e) => setInvoiceProjectSearchTerm(e.target.value)}
-                                                className="h-8"
-                                            />
-                                        </div>
-                                        <div className="max-h-[200px] overflow-y-auto">
-                                            {filteredInvoiceProjects.length === 0 ? (
-                                                <div className="p-2 text-sm text-muted-foreground text-center">
-                                                    No projects found
-                                                </div>
-                                            ) : (
-                                                filteredInvoiceProjects.map((project) => (
-                                                    <SelectItem key={project.id} value={project.code}>
-                                                        {getProjectOptionDisplay(project)}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-payment_project">Payment Project</Label>
-                                <Select
-                                    key={`edit-payment-project-${editingInvoice?.id || 'new'}`}
-                                    value={formData.payment_project || ""}
-                                    onValueChange={(value) =>
-                                        setFormData({ ...formData, payment_project: value })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select payment project" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <div className="p-2 border-b">
-                                            <Input
-                                                placeholder="Search projects..."
-                                                value={projectSearchTerm}
-                                                onChange={(e) => setProjectSearchTerm(e.target.value)}
-                                                className="h-8"
-                                            />
-                                        </div>
-                                        <div className="max-h-[200px] overflow-y-auto">
-                                            {filteredProjects.length === 0 ? (
-                                                <div className="p-2 text-sm text-muted-foreground text-center">
-                                                    No projects found
-                                                </div>
-                                            ) : (
-                                                filteredProjects.map((project) => (
-                                                    <SelectItem key={project.id} value={project.code}>
-                                                        {getProjectOptionDisplay(project)}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+          {/* Project Information Section */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-receive_project">Receive Project</Label>
+                <Select
+                  key={`edit-receive-project-${editingInvoice?.id || "new"}`}
+                  value={formData.receive_project || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, receive_project: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select receive project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2 border-b">
+                      <Input
+                        placeholder="Search projects..."
+                        value={receiveProjectSearchTerm}
+                        onChange={(e) =>
+                          setReceiveProjectSearchTerm(e.target.value)
+                        }
+                        className="h-8"
+                      />
                     </div>
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredReceiveProjects.length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          No projects found
+                        </div>
+                      ) : (
+                        filteredReceiveProjects.map((project) => (
+                          <SelectItem key={project.id} value={project.code}>
+                            {getProjectOptionDisplay(project)}
+                          </SelectItem>
+                        ))
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-invoice_project">Invoice Project</Label>
+                <Select
+                  key={`edit-invoice-project-${editingInvoice?.id || "new"}`}
+                  value={formData.invoice_project || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, invoice_project: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select invoice project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2 border-b">
+                      <Input
+                        placeholder="Search projects..."
+                        value={invoiceProjectSearchTerm}
+                        onChange={(e) =>
+                          setInvoiceProjectSearchTerm(e.target.value)
+                        }
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredInvoiceProjects.length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          No projects found
+                        </div>
+                      ) : (
+                        filteredInvoiceProjects.map((project) => (
+                          <SelectItem key={project.id} value={project.code}>
+                            {getProjectOptionDisplay(project)}
+                          </SelectItem>
+                        ))
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-payment_project">Payment Project</Label>
+                <Select
+                  key={`edit-payment-project-${editingInvoice?.id || "new"}`}
+                  value={formData.payment_project || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, payment_project: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2 border-b">
+                      <Input
+                        placeholder="Search projects..."
+                        value={projectSearchTerm}
+                        onChange={(e) => setProjectSearchTerm(e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredProjects.length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          No projects found
+                        </div>
+                      ) : (
+                        filteredProjects.map((project) => (
+                          <SelectItem key={project.id} value={project.code}>
+                            {getProjectOptionDisplay(project)}
+                          </SelectItem>
+                        ))
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
 
-                    {/* Additional Information Section */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-cur_loc">Current Location</Label>
-                                <Select
-                                    key={`edit-dept-${editingInvoice?.id || 'new'}`}
-                                    value={formData.cur_loc || ""}
-                                    onValueChange={(value) =>
-                                        setFormData({ ...formData, cur_loc: value })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select current location" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <div className="p-2 border-b">
-                                            <Input
-                                                placeholder="Search departments..."
-                                                value={departmentSearchTerm}
-                                                onChange={(e) => setDepartmentSearchTerm(e.target.value)}
-                                                className="h-8"
-                                            />
-                                        </div>
-                                        <div className="max-h-[200px] overflow-y-auto">
-                                            {filteredDepartments.length === 0 ? (
-                                                <div className="p-2 text-sm text-muted-foreground text-center">
-                                                    No departments found
-                                                </div>
-                                            ) : (
-                                                filteredDepartments.map((department) => (
-                                                    <SelectItem key={department.id} value={department.location_code}>
-                                                        {getDepartmentOptionDisplay(department)}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-faktur_no">Faktur Number</Label>
-                                <Input
-                                    id="edit-faktur_no"
-                                    value={formData.faktur_no}
-                                    onChange={(e) => setFormData({ ...formData, faktur_no: e.target.value })}
-                                    placeholder="Enter faktur number"
-                                />
-                            </div>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="edit-remarks">Remarks</Label>
-                            <Textarea
-                                id="edit-remarks"
-                                value={formData.remarks}
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, remarks: e.target.value })}
-                                placeholder="Enter remarks"
-                                rows={3}
-                            />
-                        </div>
+          {/* Additional Information Section */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-cur_loc">Current Location</Label>
+                <Select
+                  key={`edit-dept-${editingInvoice?.id || "new"}`}
+                  value={formData.cur_loc || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, cur_loc: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select current location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="p-2 border-b">
+                      <Input
+                        placeholder="Search departments..."
+                        value={departmentSearchTerm}
+                        onChange={(e) =>
+                          setDepartmentSearchTerm(e.target.value)
+                        }
+                        className="h-8"
+                      />
                     </div>
-                </div>
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            onOpenChange(false);
-                            resetForm();
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={onSubmit}
-                        disabled={!formData.invoice_number || !formData.invoice_date || !formData.receive_date || !formData.supplier_id || !formData.type_id || !formData.amount || submitting || Object.keys(validationErrors).length > 0}
-                    >
-                        {submitting ? "Updating..." : "Update Invoice"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-} 
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {filteredDepartments.length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          No departments found
+                        </div>
+                      ) : (
+                        filteredDepartments.map((department) => (
+                          <SelectItem
+                            key={department.id}
+                            value={department.location_code}
+                          >
+                            {getDepartmentOptionDisplay(department)}
+                          </SelectItem>
+                        ))
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-faktur_no">Faktur Number</Label>
+                <Input
+                  id="edit-faktur_no"
+                  value={formData.faktur_no}
+                  onChange={(e) =>
+                    setFormData({ ...formData, faktur_no: e.target.value })
+                  }
+                  placeholder="Enter faktur number"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-remarks">Remarks</Label>
+              <Textarea
+                id="edit-remarks"
+                value={formData.remarks}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setFormData({ ...formData, remarks: e.target.value })
+                }
+                placeholder="Enter remarks"
+                rows={3}
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              onOpenChange(false);
+              resetForm();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onSubmit}
+            disabled={
+              !formData.invoice_number ||
+              !formData.invoice_date ||
+              !formData.receive_date ||
+              !formData.supplier_id ||
+              !formData.type_id ||
+              !formData.amount ||
+              submitting ||
+              Object.keys(validationErrors).length > 0
+            }
+          >
+            {submitting ? "Updating..." : "Update Invoice"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

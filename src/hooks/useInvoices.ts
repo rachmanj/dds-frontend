@@ -40,7 +40,18 @@ export function useInvoices() {
         ? responseData
         : [];
 
-      setInvoices(invoicesData);
+      // Ensure all invoices have safe defaults for critical fields
+      const safeInvoicesData = invoicesData.map(
+        (invoice: Partial<Invoice>) => ({
+          ...invoice,
+          invoice_number: invoice.invoice_number || "",
+          status: invoice.status || "open",
+          currency: invoice.currency || "IDR",
+          amount: invoice.amount || 0,
+        })
+      );
+
+      setInvoices(safeInvoicesData);
     } catch (error: unknown) {
       console.error("Error fetching invoices:", error);
       setInvoices([]);
@@ -91,8 +102,19 @@ export function useInvoices() {
       const response = await api.post("/api/invoices", dataToSend);
       const newInvoice = response.data.data || response.data;
 
-      // Add to the beginning of the list
-      setInvoices((prev) => [newInvoice, ...prev]);
+      // Ensure the new invoice has required fields before adding to list
+      if (newInvoice && newInvoice.id && newInvoice.invoice_number) {
+        // Ensure critical fields have safe defaults
+        const safeInvoice = {
+          ...newInvoice,
+          invoice_number: newInvoice.invoice_number || "",
+          status: newInvoice.status || "open",
+          currency: newInvoice.currency || "IDR",
+          amount: newInvoice.amount || 0,
+        };
+        // Add to the beginning of the list
+        setInvoices((prev) => [safeInvoice, ...prev]);
+      }
       return true;
     } catch (error: unknown) {
       console.error("Error creating invoice:", error);
@@ -154,9 +176,24 @@ export function useInvoices() {
       const response = await api.put(`/api/invoices/${id}`, dataToSend);
       const updatedInvoice = response.data.data || response.data;
 
-      setInvoices((prev) =>
-        prev.map((invoice) => (invoice.id === id ? updatedInvoice : invoice))
-      );
+      // Ensure the updated invoice has required fields before updating the list
+      if (
+        updatedInvoice &&
+        updatedInvoice.id &&
+        updatedInvoice.invoice_number
+      ) {
+        // Ensure critical fields have safe defaults
+        const safeInvoice = {
+          ...updatedInvoice,
+          invoice_number: updatedInvoice.invoice_number || "",
+          status: updatedInvoice.status || "open",
+          currency: updatedInvoice.currency || "IDR",
+          amount: updatedInvoice.amount || 0,
+        };
+        setInvoices((prev) =>
+          prev.map((invoice) => (invoice.id === id ? safeInvoice : invoice))
+        );
+      }
       return true;
     } catch (error: unknown) {
       console.error("Error updating invoice:", error);
