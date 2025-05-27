@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
@@ -20,9 +22,11 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { MenuItems } from './MenuItems'
+import { useFilteredMenuItems } from './ProtectedMenu'
 
 const AppSidebar = () => {
+    const filteredMenuItems = useFilteredMenuItems();
+
     return (
         <Sidebar collapsible='icon'>
             <SidebarHeader>
@@ -34,7 +38,7 @@ const AppSidebar = () => {
             </SidebarHeader>
             <SidebarSeparator />
             <SidebarContent>
-                {MenuItems.map((group) => (
+                {filteredMenuItems.map((group) => (
                     <SidebarGroup key={group.GroupLabel}>
                         <SidebarMenu>
                             <Collapsible defaultOpen className="group/collapsible">

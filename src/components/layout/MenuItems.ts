@@ -17,11 +17,23 @@ export interface MenuItem {
   href: string;
   icon: LucideIcon;
   title: string;
+  // Permission-based access control
+  permission?: string;
+  permissions?: string[];
+  role?: string;
+  roles?: string[];
+  requireAll?: boolean; // If true, requires ALL permissions/roles, otherwise ANY
 }
 
 export interface MenuGroup {
   GroupLabel: string;
   items: MenuItem[];
+  // Group-level permissions (if specified, entire group is hidden if user lacks access)
+  permission?: string;
+  permissions?: string[];
+  role?: string;
+  roles?: string[];
+  requireAll?: boolean;
 }
 
 export const MenuItems: MenuGroup[] = [
@@ -38,6 +50,7 @@ export const MenuItems: MenuGroup[] = [
   },
   {
     GroupLabel: "Invoices",
+    permission: "invoices.view", // Entire group requires this permission
     items: [
       {
         label: "Dashboard",
@@ -50,11 +63,13 @@ export const MenuItems: MenuGroup[] = [
         href: "/invoices",
         icon: FileCheck2,
         title: "Manage and view all invoices",
+        permission: "invoices.list",
       },
     ],
   },
   {
     GroupLabel: "Additional Documents",
+    permission: "documents.view",
     items: [
       {
         label: "Dashboard",
@@ -67,11 +82,13 @@ export const MenuItems: MenuGroup[] = [
         href: "/additional-documents",
         icon: FileCheck2,
         title: "Manage and view all additional documents",
+        permission: "documents.list",
       },
     ],
   },
   {
     GroupLabel: "Distribution",
+    permission: "distribution.view",
     items: [
       {
         label: "Distribution",
@@ -83,59 +100,69 @@ export const MenuItems: MenuGroup[] = [
   },
   {
     GroupLabel: "Master",
+    permissions: ["master.view", "admin.access"], // Requires ANY of these permissions
     items: [
       {
         label: "Suppliers",
         href: "/suppliers",
         icon: Building2,
         title: "Manage supplier information and contacts",
+        permission: "suppliers.view",
       },
       {
         label: "Additional Documents Types",
         href: "/addoc-types",
         icon: FileType,
         title: "Configure additional document types and categories",
+        permission: "document-types.view",
       },
       {
         label: "Invoices Types",
         href: "/invoice-types",
         icon: Receipt,
         title: "Configure invoice types and templates",
+        permission: "invoice-types.view",
       },
       {
         label: "Projects",
         href: "/projects",
         icon: FolderOpen,
         title: "Manage projects and project settings",
+        permission: "projects.view",
       },
       {
         label: "Departments",
         href: "/departments",
         icon: Building2,
         title: "Manage departments and organizational structure",
+        permission: "departments.view",
       },
     ],
   },
   {
     GroupLabel: "Admin",
+    permissions: ["users.view", "users.list"], // Requires ANY of these permissions (users.view OR users.list)
     items: [
       {
         label: "Users",
         href: "/users",
         icon: Users,
         title: "Manage user accounts and profiles",
+        permission: "users.view",
       },
       {
         label: "Roles",
         href: "/roles",
         icon: UserCheck,
         title: "Configure user roles and access levels",
+        permission: "roles.view",
       },
       {
         label: "Permissions",
         href: "/permissions",
         icon: ShieldCheck,
         title: "Manage permissions and security settings",
+        permission: "permissions.view",
       },
     ],
   },

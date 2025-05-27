@@ -47,15 +47,11 @@ const LoginForm = () => {
       setIsLoading(true);
       setError("");
 
-      console.log("Attempting to sign in with:", email);
-
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
       });
-
-      console.log("Sign in result:", result);
 
       if (result?.error) {
         setError("Invalid email or password");
