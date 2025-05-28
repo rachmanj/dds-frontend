@@ -355,7 +355,7 @@ export default function CreateInvoicePage() {
                 <CardContent className="space-y-6">
                     {/* Basic Information Section */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Basic Information</h3>
+                        {/* <h3 className="text-lg font-medium">Basic Information</h3> */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="supplier_id">Supplier *</Label>
@@ -450,7 +450,7 @@ export default function CreateInvoicePage() {
 
                     {/* Dates and PO Section */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Dates and PO Information</h3>
+                        {/* <h3 className="text-lg font-medium">Dates and PO Information</h3> */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="invoice_date">Invoice Date *</Label>
@@ -492,7 +492,7 @@ export default function CreateInvoicePage() {
 
                     {/* Amount Section */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Amount Information</h3>
+                        {/* <h3 className="text-lg font-medium">Amount Information</h3> */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="currency">Currency *</Label>
@@ -531,7 +531,7 @@ export default function CreateInvoicePage() {
 
                     {/* Project Information Section */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Project Information</h3>
+                        {/* <h3 className="text-lg font-medium">Project Information</h3> */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="invoice_project">Invoice Project</Label>
@@ -621,7 +621,7 @@ export default function CreateInvoicePage() {
 
                     {/* Additional Information Section */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Additional Information</h3>
+                        {/* <h3 className="text-lg font-medium">Additional Information</h3> */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="cur_loc">Current Location</Label>

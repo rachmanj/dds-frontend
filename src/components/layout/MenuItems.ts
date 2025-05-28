@@ -10,6 +10,9 @@ import {
   Users,
   UserCheck,
   ShieldCheck,
+  Send,
+  Package,
+  Settings,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -91,10 +94,32 @@ export const MenuItems: MenuGroup[] = [
     permission: "distribution.view",
     items: [
       {
-        label: "Distribution",
-        href: "/distribution",
-        icon: Truck,
-        title: "Manage distribution and delivery processes",
+        label: "Dashboard",
+        href: "/distributions/dashboard",
+        icon: LayoutDashboard,
+        title: "View distribution dashboard with overview and statistics",
+        permission: "distribution.view",
+      },
+      {
+        label: "Distributions",
+        href: "/distributions",
+        icon: Package,
+        title: "Manage document distributions between departments",
+        permission: "distribution.list",
+      },
+      {
+        label: "Distribution Types",
+        href: "/distribution-types",
+        icon: Settings,
+        title: "Manage distribution types and priorities",
+        permission: "distribution.types.view",
+      },
+      {
+        label: "Workflow",
+        href: "/distributions/workflow",
+        icon: Send,
+        title: "Track distribution workflow and status",
+        permission: "distribution.workflow",
       },
     ],
   },

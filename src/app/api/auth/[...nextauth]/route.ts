@@ -42,6 +42,8 @@ const handler = NextAuth({
                 name: user.name,
                 email: user.email,
                 role: user.role || "user",
+                department_id: user.department_id,
+                department: user.department || null,
                 accessToken: token, // Store the Sanctum token
               };
             }
@@ -60,12 +62,18 @@ const handler = NextAuth({
   },
   callbacks: {
     async session({ session, token }) {
-      // Add the user's ID, role, and access token to the session
+      // Add the user's ID, role, department_id, department, and access token to the session
       if (token.sub) {
         session.user.id = token.sub;
       }
       if (token.role) {
         session.user.role = token.role;
+      }
+      if (token.department_id) {
+        session.user.department_id = token.department_id;
+      }
+      if (token.department) {
+        session.user.department = token.department;
       }
       if (token.accessToken) {
         session.accessToken = token.accessToken;
@@ -73,10 +81,12 @@ const handler = NextAuth({
       return session;
     },
     async jwt({ token, user }) {
-      // Persist the user's ID, role, and access token to the token
+      // Persist the user's ID, role, department_id, department, and access token to the token
       if (user) {
         token.sub = user.id;
         token.role = user.role;
+        token.department_id = user.department_id;
+        token.department = user.department;
         token.accessToken = user.accessToken;
       }
       return token;

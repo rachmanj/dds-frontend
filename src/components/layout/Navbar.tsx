@@ -44,6 +44,23 @@ const Navbar = () => {
         return "User";
     };
 
+    // Get user's department location code
+    const getUserDepartmentCode = () => {
+        // Try to get department info from session user
+        if (session?.user?.department?.location_code) {
+            return session.user.department.location_code;
+        }
+        // Fallback - this might be available if department data is loaded
+        return null;
+    };
+
+    // Get formatted display name with department code
+    const getFormattedDisplayName = () => {
+        const name = getUserDisplayName();
+        const deptCode = getUserDepartmentCode();
+        return deptCode ? `${name} (${deptCode})` : name;
+    };
+
     // Get user's initials for avatar fallback
     const getUserInitials = () => {
         const name = getUserDisplayName();
@@ -62,7 +79,7 @@ const Navbar = () => {
             {/* RIGHT */}
             <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-muted-foreground">
-                    Welcome, {getUserDisplayName()}
+                    Welcome, {getFormattedDisplayName()}
                 </span>
                 {/* THEME MENU */}
                 <DropdownMenu>

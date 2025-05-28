@@ -103,7 +103,7 @@ export default function EditInvoicePage() {
                     invoice_project: invoice.invoice_project || "",
                     payment_project: invoice.payment_project || "",
                     currency: invoice.currency || "IDR",
-                    amount: invoice.amount?.toString() || "",
+                    amount: invoice.amount ? Math.round(Number(invoice.amount)).toString() : "",
                     type_id: invoice.type?.id || invoice.type_id || 0,
                     remarks: invoice.remarks || "",
                     cur_loc: invoice.cur_loc || "",
@@ -394,7 +394,7 @@ export default function EditInvoicePage() {
                         <CardContent className="space-y-6">
                             {/* Basic Information Section */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Basic Information</h3>
+                                {/* <h3 className="text-lg font-medium">Basic Information</h3> */}
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="supplier_id">Supplier *</Label>
@@ -491,7 +491,7 @@ export default function EditInvoicePage() {
 
                             {/* Dates and PO Section */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Dates and PO Information</h3>
+                                {/* <h3 className="text-lg font-medium">Dates and PO Information</h3> */}
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="invoice_date">Invoice Date *</Label>
@@ -533,7 +533,7 @@ export default function EditInvoicePage() {
 
                             {/* Amount Section */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Amount Information</h3>
+                                {/* <h3 className="text-lg font-medium">Amount Information</h3> */}
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="currency">Currency *</Label>
@@ -572,7 +572,7 @@ export default function EditInvoicePage() {
 
                             {/* Project Information Section */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Project Information</h3>
+                                {/* <h3 className="text-lg font-medium">Project Information</h3> */}
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="receive_project">Receive Project</Label>
@@ -684,7 +684,7 @@ export default function EditInvoicePage() {
 
                             {/* Additional Information Section */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Additional Information</h3>
+                                {/* <h3 className="text-lg font-medium">Additional Information</h3> */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="cur_loc">Current Location</Label>

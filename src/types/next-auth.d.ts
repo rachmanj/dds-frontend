@@ -6,6 +6,12 @@ declare module "next-auth" {
     name: string;
     email: string;
     role?: string;
+    department_id?: number;
+    department?: {
+      id: number;
+      name: string;
+      location_code: string;
+    } | null;
     accessToken?: string;
   }
 
@@ -19,6 +25,12 @@ declare module "next-auth/jwt" {
   interface JWT {
     sub: string;
     role?: string;
+    department_id?: number;
+    department?: {
+      id: number;
+      name: string;
+      location_code: string;
+    } | null;
     accessToken?: string;
   }
 }
