@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -21,6 +22,7 @@ import { departmentService } from '@/lib/api/departments';
 export default function EditDistributionPage() {
     const router = useRouter();
     const params = useParams();
+    const { data: session } = useSession();
     const distributionId = parseInt(params.id as string);
 
     const [distribution, setDistribution] = useState<Distribution | null>(null);
@@ -194,6 +196,7 @@ export default function EditDistributionPage() {
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
                 isEditing={true}
+                currentUser={session?.user}
             />
         </div>
     );

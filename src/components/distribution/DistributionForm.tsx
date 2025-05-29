@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { toast } from 'sonner';
 
 import {
     Distribution,
@@ -34,6 +35,7 @@ import {
 import { Department } from '@/types/department';
 import { invoiceService, Invoice } from '@/lib/api/invoices';
 import { additionalDocumentService, AdditionalDocument } from '@/lib/api/additional-documents';
+import { distributionService } from '@/lib/api/distribution';
 
 // Form validation schema
 const distributionSchema = z.object({
@@ -67,6 +69,17 @@ interface DistributionFormProps {
     onSubmit: (data: CreateDistributionRequest | UpdateDistributionRequest) => Promise<void>;
     onCancel: () => void;
     isEditing?: boolean;
+    currentUser?: {
+        id: string;
+        name: string;
+        email: string;
+        department_id?: number;
+        department?: {
+            id: number;
+            name: string;
+            location_code: string;
+        } | null;
+    };
 }
 
 export function DistributionForm({
@@ -75,7 +88,8 @@ export function DistributionForm({
     departments,
     onSubmit,
     onCancel,
-    isEditing = false
+    isEditing = false,
+    currentUser
 }: DistributionFormProps) {
     // Initialize form first
     const form = useForm<FormData>({
@@ -83,7 +97,7 @@ export function DistributionForm({
         defaultValues: {
             document_type: initialData?.document_type || undefined,
             type_id: initialData?.type_id || undefined,
-            origin_department_id: initialData?.origin_department_id || undefined,
+            origin_department_id: initialData?.origin_department_id || currentUser?.department_id || undefined,
             destination_department_id: initialData?.destination_department_id || undefined,
             notes: initialData?.notes || '',
         },
@@ -154,7 +168,7 @@ export function DistributionForm({
     }, [initialData, isEditing]);
 
     // Load available documents based on document type
-    const loadAvailableDocuments = async () => {
+    const loadAvailableDocuments = useCallback(async () => {
         if (!documentType) return;
 
         setLoadingDocuments(true);
@@ -173,18 +187,20 @@ export function DistributionForm({
         } finally {
             setLoadingDocuments(false);
         }
-    };
+    }, [documentType, documentSearch]);
 
     // Reload documents when document type changes
     useEffect(() => {
         if (documentType) {
-            // Clear selected documents when changing type
-            setSelectedDocuments([]);
-            setAutoIncludedDocuments([]);
-            setWarnings([]);
+            // Only clear selected documents when changing type in create mode
+            if (!isEditing) {
+                setSelectedDocuments([]);
+                setAutoIncludedDocuments([]);
+                setWarnings([]);
+            }
             loadAvailableDocuments();
         }
-    }, [documentType]);
+    }, [documentType, isEditing, loadAvailableDocuments]);
 
     // Reload documents when search changes
     useEffect(() => {
@@ -195,7 +211,7 @@ export function DistributionForm({
 
             return () => clearTimeout(timeoutId);
         }
-    }, [documentSearch]);
+    }, [documentType, documentSearch, loadAvailableDocuments]);
 
     const handleSubmit = async (data: FormData) => {
         setIsSubmitting(true);
@@ -231,7 +247,7 @@ export function DistributionForm({
         }
     };
 
-    const addDocument = (type: DocumentType, document: Invoice | AdditionalDocument) => {
+    const addDocument = async (type: DocumentType, document: Invoice | AdditionalDocument) => {
         const isAlreadySelected = selectedDocuments.some(
             doc => doc.type === type && doc.id === document.id
         );
@@ -243,7 +259,21 @@ export function DistributionForm({
                 data: document
             };
 
-            setSelectedDocuments(prev => [...prev, newDoc]);
+            // If in edit mode, immediately attach document via API
+            if (isEditing && initialData) {
+                try {
+                    await distributionService.attachDocuments(initialData.id, [{ type, id: document.id }]);
+                    setSelectedDocuments(prev => [...prev, newDoc]);
+                    toast.success(`${type === 'invoice' ? 'Invoice' : 'Document'} attached successfully`);
+                } catch (error: any) {
+                    console.error('Failed to attach document:', error);
+                    toast.error(error.message || 'Failed to attach document');
+                    return;
+                }
+            } else {
+                // In create mode, just add to local state
+                setSelectedDocuments(prev => [...prev, newDoc]);
+            }
 
             // If adding an invoice, simulate auto-inclusion logic for preview
             if (type === 'invoice' && 'additionalDocuments' in document && document.additionalDocuments) {
@@ -276,10 +306,26 @@ export function DistributionForm({
         }
     };
 
-    const removeDocument = (type: DocumentType, id: number) => {
-        setSelectedDocuments(prev =>
-            prev.filter(doc => !(doc.type === type && doc.id === id))
-        );
+    const removeDocument = async (type: DocumentType, id: number) => {
+        // If in edit mode, immediately detach document via API
+        if (isEditing && initialData) {
+            try {
+                await distributionService.detachDocument(initialData.id, type, id);
+                setSelectedDocuments(prev =>
+                    prev.filter(doc => !(doc.type === type && doc.id === id))
+                );
+                toast.success(`${type === 'invoice' ? 'Invoice' : 'Document'} removed successfully`);
+            } catch (error: any) {
+                console.error('Failed to detach document:', error);
+                toast.error(error.message || 'Failed to remove document');
+                return;
+            }
+        } else {
+            // In create mode, just remove from local state
+            setSelectedDocuments(prev =>
+                prev.filter(doc => !(doc.type === type && doc.id === id))
+            );
+        }
 
         // If removing an invoice, also remove its auto-included documents
         if (type === 'invoice') {
@@ -419,56 +465,81 @@ export function DistributionForm({
                             <FormField
                                 control={form.control}
                                 name="origin_department_id"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>From Department</FormLabel>
-                                        <Select
-                                            onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
-                                            value={field.value ? field.value.toString() : ''}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Select origin department" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent className="max-h-60">
-                                                <div className="p-2 border-b">
-                                                    <div className="relative">
-                                                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                        <Input
-                                                            placeholder="Search departments..."
-                                                            value={originDeptSearch}
-                                                            onChange={(e) => setOriginDeptSearch(e.target.value)}
-                                                            className="pl-8 h-8"
-                                                        />
+                                render={({ field }) => {
+                                    // Get the selected department for display
+                                    const selectedDept = currentUser?.department ||
+                                        departments.find(d => d.id === field.value);
+
+                                    return (
+                                        <FormItem>
+                                            <FormLabel>From Department</FormLabel>
+                                            {!isEditing && currentUser?.department ? (
+                                                // Read-only display for create mode
+                                                <div className="w-full p-3 bg-muted/50 border rounded-md">
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <div className="font-medium">{currentUser.department.name}</div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                Your Department - {currentUser.department.location_code}
+                                                            </div>
+                                                        </div>
+                                                        <Badge variant="outline">Current User</Badge>
                                                     </div>
                                                 </div>
-                                                <div className="max-h-[200px] overflow-y-auto">
-                                                    {filteredOriginDepartments.length === 0 ? (
-                                                        <div className="p-2 text-sm text-muted-foreground text-center">
-                                                            No departments found
+                                            ) : (
+                                                // Editable select for edit mode or when no user department
+                                                <Select
+                                                    onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                                                    value={field.value ? field.value.toString() : ''}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select origin department" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent className="max-h-60">
+                                                        <div className="p-2 border-b">
+                                                            <div className="relative">
+                                                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                                <Input
+                                                                    placeholder="Search departments..."
+                                                                    value={originDeptSearch}
+                                                                    onChange={(e) => setOriginDeptSearch(e.target.value)}
+                                                                    className="pl-8 h-8"
+                                                                />
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        filteredOriginDepartments.map((dept) => (
-                                                            <SelectItem key={dept.id} value={dept.id.toString()}>
-                                                                <div>
-                                                                    <div className="font-medium">{dept.name}</div>
-                                                                    <div className="text-sm text-muted-foreground">
-                                                                        {dept.project} - {dept.akronim} - {dept.location_code}
-                                                                    </div>
+                                                        <div className="max-h-[200px] overflow-y-auto">
+                                                            {filteredOriginDepartments.length === 0 ? (
+                                                                <div className="p-2 text-sm text-muted-foreground text-center">
+                                                                    No departments found
                                                                 </div>
-                                                            </SelectItem>
-                                                        ))
-                                                    )}
-                                                </div>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormDescription>
-                                            Department sending the documents
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                                                            ) : (
+                                                                filteredOriginDepartments.map((dept) => (
+                                                                    <SelectItem key={dept.id} value={dept.id.toString()}>
+                                                                        <div>
+                                                                            <div className="font-medium">{dept.name}</div>
+                                                                            <div className="text-sm text-muted-foreground">
+                                                                                {dept.project} - {dept.akronim} - {dept.location_code}
+                                                                            </div>
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                ))
+                                                            )}
+                                                        </div>
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                            <FormDescription>
+                                                {!isEditing && currentUser?.department
+                                                    ? "Automatically set to your department. Only your department's documents can be distributed."
+                                                    : "Department sending the documents"
+                                                }
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    );
+                                }}
                             />
 
                             {/* Destination Department */}
@@ -553,7 +624,7 @@ export function DistributionForm({
                     </Card>
 
                     {/* Document Selection */}
-                    {documentType && !isEditing && (
+                    {documentType && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center space-x-2">
@@ -567,7 +638,10 @@ export function DistributionForm({
                                     </span>
                                 </CardTitle>
                                 <CardDescription>
-                                    Choose the documents to include in this distribution
+                                    {isEditing
+                                        ? `Add or remove ${documentType === 'invoice' ? 'invoices' : 'additional documents'} for this distribution`
+                                        : `Choose ${documentType === 'invoice' ? 'invoices' : 'additional documents'} to include in this distribution`
+                                    }
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -607,7 +681,7 @@ export function DistributionForm({
                                                         <div
                                                             key={invoice.id}
                                                             className="p-3 border-b last:border-b-0 hover:bg-muted/50 cursor-pointer"
-                                                            onClick={() => addDocument('invoice', invoice)}
+                                                            onClick={async () => await addDocument('invoice', invoice)}
                                                         >
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex-1">
@@ -646,7 +720,7 @@ export function DistributionForm({
                                                         <div
                                                             key={doc.id}
                                                             className="p-3 border-b last:border-b-0 hover:bg-muted/50 cursor-pointer"
-                                                            onClick={() => addDocument('additional_document', doc)}
+                                                            onClick={async () => await addDocument('additional_document', doc)}
                                                         >
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex-1">
@@ -729,7 +803,7 @@ export function DistributionForm({
                                                     type="button"
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => removeDocument(doc.type, doc.id)}
+                                                    onClick={async () => await removeDocument(doc.type, doc.id)}
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </Button>

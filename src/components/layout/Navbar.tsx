@@ -20,6 +20,7 @@ import { useTheme } from 'next-themes'
 import { signOut } from 'next-auth/react'
 import { toast } from 'sonner'
 import { SidebarTrigger } from '../ui/sidebar'
+import { NotificationDropdown } from './NotificationDropdown'
 
 
 const Navbar = () => {
@@ -81,6 +82,10 @@ const Navbar = () => {
                 <span className="text-sm font-medium text-muted-foreground">
                     Welcome, {getFormattedDisplayName()}
                 </span>
+
+                {/* NOTIFICATIONS */}
+                <NotificationDropdown />
+
                 {/* THEME MENU */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

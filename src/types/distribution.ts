@@ -93,6 +93,11 @@ export interface Distribution {
   updated_at: string;
   deleted_at?: string;
 
+  // Discrepancy tracking
+  has_discrepancies?: boolean;
+  sender_verification_notes?: string;
+  receiver_verification_notes?: string;
+
   // Relationships
   type?: DistributionType;
   origin_department?: Department;
@@ -145,6 +150,8 @@ export interface UpdateDistributionRequest {
 export interface DocumentVerification {
   document_type: DocumentType;
   document_id: number;
+  status?: "verified" | "missing" | "damaged";
+  notes?: string;
 }
 
 // Distribution Filters

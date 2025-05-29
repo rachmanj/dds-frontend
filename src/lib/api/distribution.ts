@@ -176,12 +176,17 @@ export const distributionService = {
     documentVerifications: Array<{
       document_type: string;
       document_id: number;
-      verified: boolean;
-    }>
+      status?: string;
+      notes?: string;
+    }>,
+    verificationNotes?: string
   ): Promise<Distribution> => {
     const response = await api.post<ApiResponse<Distribution>>(
       `/api/distributions/${id}/verify-sender`,
-      { document_verifications: documentVerifications }
+      {
+        document_verifications: documentVerifications,
+        verification_notes: verificationNotes,
+      }
     );
     if (!response.data.data) {
       throw new Error("Failed to verify sender");
@@ -214,12 +219,19 @@ export const distributionService = {
     documentVerifications: Array<{
       document_type: string;
       document_id: number;
-      verified: boolean;
-    }>
+      status: string;
+      notes?: string;
+    }>,
+    verificationNotes?: string,
+    forceCompleteWithDiscrepancies?: boolean
   ): Promise<Distribution> => {
     const response = await api.post<ApiResponse<Distribution>>(
       `/api/distributions/${id}/verify-receiver`,
-      { document_verifications: documentVerifications }
+      {
+        document_verifications: documentVerifications,
+        verification_notes: verificationNotes,
+        force_complete_with_discrepancies: forceCompleteWithDiscrepancies,
+      }
     );
     if (!response.data.data) {
       throw new Error("Failed to verify receiver");

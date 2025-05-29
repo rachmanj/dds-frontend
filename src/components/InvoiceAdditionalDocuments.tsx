@@ -32,11 +32,14 @@ export function InvoiceAdditionalDocuments({
     } = useInvoiceAdditionalDocuments();
 
     const {
-        additionalDocuments: allAdditionalDocuments,
+        additionalDocuments: locationFilteredDocuments,
+        fetchAllAdditionalDocuments,
         loading: documentsLoading,
     } = useAdditionalDocuments();
 
     const [attachedDocuments, setAttachedDocuments] = useState<AdditionalDocument[]>([]);
+    const [allAdditionalDocuments, setAllAdditionalDocuments] = useState<AdditionalDocument[]>([]);
+    const [loadingAllDocuments, setLoadingAllDocuments] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
@@ -78,12 +81,27 @@ export function InvoiceAdditionalDocuments({
         loadAttachedDocuments();
     }, [invoiceId, getInvoiceAdditionalDocuments]);
 
-    // Get available documents (not already attached)
+    // Load all additional documents when modal is opened
+    useEffect(() => {
+        const loadAllDocuments = async () => {
+            if (isModalOpen) {
+                setLoadingAllDocuments(true);
+                const allDocs = await fetchAllAdditionalDocuments();
+                setAllAdditionalDocuments(allDocs);
+                setLoadingAllDocuments(false);
+            }
+        };
+
+        loadAllDocuments();
+    }, [isModalOpen, fetchAllAdditionalDocuments]);
+
+    // Get available documents (not already attached) - use all documents for attachment
     const availableDocuments = useMemo(() => {
-        return allAdditionalDocuments.filter(
+        const documentsToUse = isModalOpen ? allAdditionalDocuments : locationFilteredDocuments;
+        return documentsToUse.filter(
             (doc) => !attachedDocuments.some((attached) => attached.id === doc.id)
         );
-    }, [allAdditionalDocuments, attachedDocuments]);
+    }, [allAdditionalDocuments, locationFilteredDocuments, attachedDocuments, isModalOpen]);
 
     // Filter documents based on search term
     const filteredDocuments = useMemo(() => {
@@ -217,7 +235,7 @@ export function InvoiceAdditionalDocuments({
                 <div className="flex justify-start">
                     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                         <DialogTrigger asChild>
-                            <Button disabled={relationshipLoading || availableDocuments.length === 0}>
+                            <Button disabled={relationshipLoading}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Documents
                             </Button>
@@ -225,6 +243,9 @@ export function InvoiceAdditionalDocuments({
                         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
                             <DialogHeader>
                                 <DialogTitle>Select Additional Documents</DialogTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    You can attach documents from any location in the system to this invoice.
+                                </p>
                             </DialogHeader>
 
                             <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
@@ -245,9 +266,18 @@ export function InvoiceAdditionalDocuments({
 
                                 {/* Documents list */}
                                 <div className="flex-1 overflow-y-auto border rounded-lg">
-                                    {filteredDocuments.length === 0 ? (
+                                    {loadingAllDocuments ? (
                                         <div className="p-4 text-center text-gray-500">
-                                            {searchTerm ? "No documents found matching your search" : "No available documents to attach"}
+                                            Loading all available documents...
+                                        </div>
+                                    ) : filteredDocuments.length === 0 ? (
+                                        <div className="p-4 text-center text-gray-500">
+                                            {searchTerm
+                                                ? "No documents found matching your search"
+                                                : allAdditionalDocuments.length === 0
+                                                    ? "No additional documents available in the system"
+                                                    : "No available documents to attach (all documents are already attached)"
+                                            }
                                         </div>
                                     ) : (
                                         <div className="space-y-2 p-4">
@@ -279,6 +309,7 @@ export function InvoiceAdditionalDocuments({
                                                                 </div>
                                                                 <div className="text-xs text-gray-600 mt-1">
                                                                     Date: {formatDate(doc.document_date)} • Status: {doc.status}
+                                                                    {doc.cur_loc && ` • Location: ${doc.cur_loc}`}
                                                                 </div>
                                                                 {relatedInvoices && relatedInvoices.length > 0 && (
                                                                     <div className="text-xs text-blue-600 mt-1">
@@ -308,7 +339,7 @@ export function InvoiceAdditionalDocuments({
                                     </Button>
                                     <Button
                                         onClick={handleAttachSelectedDocuments}
-                                        disabled={selectedDocumentIds.length === 0 || relationshipLoading || animatingDocuments.size > 0}
+                                        disabled={selectedDocumentIds.length === 0 || relationshipLoading || animatingDocuments.size > 0 || loadingAllDocuments}
                                     >
                                         {animatingDocuments.size > 0 ? "Attaching..." : `Attach ${selectedDocumentIds.length > 0 ? `(${selectedDocumentIds.length})` : ""} Documents`}
                                     </Button>

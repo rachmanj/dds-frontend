@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -27,6 +27,7 @@ import { useInvoiceTypes } from "@/hooks/useInvoiceTypes";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useProjects } from "@/hooks/useProjects";
+import { usePermissions } from "@/contexts/PermissionContext";
 
 export default function CreateInvoicePage() {
     const router = useRouter();
@@ -41,6 +42,12 @@ export default function CreateInvoicePage() {
     const { suppliers } = useSuppliers();
     const { departments } = useDepartments();
     const { projects } = useProjects();
+
+    const { data: session } = useSession();
+    const { hasPermission } = usePermissions();
+
+    // Permission check for editing current location
+    const canEditCurrentLocation = hasPermission("document.edit-cur_loc");
 
     const [formData, setFormData] = useState<InvoiceFormData>({
         invoice_number: "",
@@ -277,6 +284,16 @@ export default function CreateInvoicePage() {
     const handleCancel = () => {
         router.push("/invoices");
     };
+
+    // Set default cur_loc from user's department when session is available
+    useEffect(() => {
+        if (session?.user?.department?.location_code && !formData.cur_loc) {
+            setFormData(prev => ({
+                ...prev,
+                cur_loc: session.user.department!.location_code
+            }));
+        }
+    }, [session?.user?.department?.location_code, formData.cur_loc]);
 
     // Show loading state while checking authentication
     if (status === "loading") {
@@ -624,10 +641,18 @@ export default function CreateInvoicePage() {
                         {/* <h3 className="text-lg font-medium">Additional Information</h3> */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="cur_loc">Current Location</Label>
+                                <Label htmlFor="cur_loc">
+                                    Current Location
+                                    {!canEditCurrentLocation && (
+                                        <span className="text-xs text-muted-foreground ml-2">
+                                            (Read-only)
+                                        </span>
+                                    )}
+                                </Label>
                                 <Select
                                     value={formData.cur_loc || ""}
                                     onValueChange={(value) => setFormData({ ...formData, cur_loc: value })}
+                                    disabled={!canEditCurrentLocation}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select current location" />

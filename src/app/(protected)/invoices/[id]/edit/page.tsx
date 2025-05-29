@@ -28,6 +28,7 @@ import { useInvoiceTypes } from "@/hooks/useInvoiceTypes";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useProjects } from "@/hooks/useProjects";
+import { usePermissions } from "@/contexts/PermissionContext";
 import { InvoiceAdditionalDocuments } from "@/components/InvoiceAdditionalDocuments";
 
 export default function EditInvoicePage() {
@@ -35,6 +36,7 @@ export default function EditInvoicePage() {
     const params = useParams();
     const invoiceId = params.id as string;
     const { status } = useSession();
+    const { hasPermission } = usePermissions();
     const {
         invoices,
         updateInvoice,
@@ -77,6 +79,9 @@ export default function EditInvoicePage() {
     const [projectSearchTerm, setProjectSearchTerm] = useState("");
     const [receiveProjectSearchTerm, setReceiveProjectSearchTerm] = useState("");
     const [invoiceProjectSearchTerm, setInvoiceProjectSearchTerm] = useState("");
+
+    // Check if user can edit current location
+    const canEditCurrentLocation = hasPermission('document.edit-cur_loc');
 
     // Load invoice data when component mounts
     useEffect(() => {
@@ -547,9 +552,9 @@ export default function EditInvoicePage() {
                                             <SelectContent>
                                                 <SelectItem value="IDR">IDR</SelectItem>
                                                 <SelectItem value="USD">USD</SelectItem>
-                                                <SelectItem value="EUR">EUR</SelectItem>
+                                                <SelectItem value="AUD">AUD</SelectItem>
                                                 <SelectItem value="SGD">SGD</SelectItem>
-                                                <SelectItem value="JPY">JPY</SelectItem>
+                                                <SelectItem value="EUR">EUR</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -687,11 +692,19 @@ export default function EditInvoicePage() {
                                 {/* <h3 className="text-lg font-medium">Additional Information</h3> */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="cur_loc">Current Location</Label>
+                                        <Label htmlFor="cur_loc">
+                                            Current Location
+                                            {!canEditCurrentLocation && (
+                                                <span className="text-xs text-muted-foreground ml-2">
+                                                    (Read-only)
+                                                </span>
+                                            )}
+                                        </Label>
                                         <Select
                                             key={`edit-dept-${editingInvoice?.id || "new"}`}
                                             value={formData.cur_loc || ""}
                                             onValueChange={(value) => setFormData({ ...formData, cur_loc: value })}
+                                            disabled={!canEditCurrentLocation}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select current location" />
@@ -720,6 +733,11 @@ export default function EditInvoicePage() {
                                                 </div>
                                             </SelectContent>
                                         </Select>
+                                        {!canEditCurrentLocation && (
+                                            <p className="text-xs text-muted-foreground">
+                                                You don't have permission to edit the current location
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="faktur_no">Faktur Number</Label>

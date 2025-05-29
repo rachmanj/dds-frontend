@@ -29,29 +29,46 @@ export function useInvoices() {
       setLoading(true);
       setError(null);
 
-      // Fetch all invoices without pagination for simplicity
-      const response = await api.get("/api/invoices?per_page=1000");
+      // Use location-filtered endpoint to only show invoices where cur_loc matches user's department location_code
+      const response = await api.get(
+        "/api/invoices-location-filtered?per_page=1000"
+      );
       const responseData = response.data;
 
-      // Handle Laravel Resource Collection response structure
-      const invoicesData = Array.isArray(responseData.data)
-        ? responseData.data
-        : Array.isArray(responseData)
-        ? responseData
-        : [];
+      // Handle the specific response structure from indexWithDepartmentFilter
+      // Response structure: { success: true, data: { data: [...], total: x, ... } }
+      let invoicesData;
+      if (responseData?.success && responseData?.data) {
+        // This is from the department filter endpoint
+        invoicesData = responseData.data.data || responseData.data;
+      } else {
+        // Fallback for other response structures
+        invoicesData = Array.isArray(responseData.data)
+          ? responseData.data
+          : Array.isArray(responseData)
+          ? responseData
+          : [];
+      }
+
+      // Ensure invoicesData is always an array
+      const safeInvoicesData = Array.isArray(invoicesData) ? invoicesData : [];
 
       // Ensure all invoices have safe defaults for critical fields
-      const safeInvoicesData = invoicesData.map(
-        (invoice: Partial<Invoice>) => ({
-          ...invoice,
-          invoice_number: invoice.invoice_number || "",
-          status: invoice.status || "open",
-          currency: invoice.currency || "IDR",
-          amount: invoice.amount || 0,
-        })
-      );
+      const safeInvoices = safeInvoicesData
+        .filter((invoice: any) => invoice && invoice.id) // Only include records with valid IDs
+        .map(
+          (invoice: Partial<Invoice>) =>
+            ({
+              ...invoice,
+              id: invoice.id!, // We know id exists due to filter above
+              invoice_number: invoice.invoice_number || "",
+              status: invoice.status || "open",
+              currency: invoice.currency || "IDR",
+              amount: invoice.amount || 0,
+            } as Invoice)
+        );
 
-      setInvoices(safeInvoicesData);
+      setInvoices(safeInvoices);
     } catch (error: unknown) {
       console.error("Error fetching invoices:", error);
       setInvoices([]);
@@ -112,8 +129,11 @@ export function useInvoices() {
           currency: newInvoice.currency || "IDR",
           amount: newInvoice.amount || 0,
         };
-        // Add to the beginning of the list
-        setInvoices((prev) => [safeInvoice, ...prev]);
+        // Add to the beginning of the list with safety check
+        setInvoices((prev) => {
+          const currentInvoices = Array.isArray(prev) ? prev : [];
+          return [safeInvoice, ...currentInvoices];
+        });
       }
       return true;
     } catch (error: unknown) {
@@ -190,9 +210,12 @@ export function useInvoices() {
           currency: updatedInvoice.currency || "IDR",
           amount: updatedInvoice.amount || 0,
         };
-        setInvoices((prev) =>
-          prev.map((invoice) => (invoice.id === id ? safeInvoice : invoice))
-        );
+        setInvoices((prev) => {
+          const currentInvoices = Array.isArray(prev) ? prev : [];
+          return currentInvoices.map((invoice) =>
+            invoice.id === id ? safeInvoice : invoice
+          );
+        });
       }
       return true;
     } catch (error: unknown) {
@@ -235,7 +258,10 @@ export function useInvoices() {
 
     try {
       await api.delete(`/api/invoices/${id}`);
-      setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
+      setInvoices((prev) => {
+        const currentInvoices = Array.isArray(prev) ? prev : [];
+        return currentInvoices.filter((invoice) => invoice.id !== id);
+      });
       return true;
     } catch (error: unknown) {
       console.error("Error deleting invoice:", error);

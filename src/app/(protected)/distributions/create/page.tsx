@@ -220,7 +220,7 @@ export default function CreateDistributionPage() {
                 departments={departments}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
-                isEditing={false}
+                currentUser={session?.user}
             />
         </div>
     );

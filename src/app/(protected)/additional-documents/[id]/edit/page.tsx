@@ -22,12 +22,14 @@ import { AdditionalDocument, AdditionalDocumentFormData } from "@/types/addition
 import { useAdditionalDocuments } from "@/hooks/useAdditionalDocuments";
 import { useAdditionalDocumentTypes } from "@/hooks/useAdditionalDocumentTypes";
 import { useDepartments } from "@/hooks/useDepartments";
+import { usePermissions } from "@/contexts/PermissionContext";
 
 export default function EditAdditionalDocumentPage() {
     const router = useRouter();
     const params = useParams();
     const documentId = params.id as string;
     const { status } = useSession();
+    const { hasPermission } = usePermissions();
     const {
         additionalDocuments,
         updateAdditionalDocument,
@@ -54,6 +56,9 @@ export default function EditAdditionalDocumentPage() {
     // State for searchable selects
     const [departmentSearchTerm, setDepartmentSearchTerm] = useState("");
     const [typeSearchTerm, setTypeSearchTerm] = useState("");
+
+    // Check if user can edit current location
+    const canEditCurrentLocation = hasPermission('document.edit-cur_loc');
 
     // Load document data when component mounts
     useEffect(() => {
@@ -126,12 +131,12 @@ export default function EditAdditionalDocumentPage() {
         if (!editingDocument) return;
 
         setSubmitting(true);
-        const success = await updateAdditionalDocument(editingDocument.id, formData);
-        if (success) {
+        const result = await updateAdditionalDocument(editingDocument.id, formData);
+        if (result.success) {
             toast.success("Additional document updated successfully!");
             router.push("/additional-documents");
         } else {
-            toast.error("Failed to update additional document. Please try again.");
+            toast.error(result.error || "Failed to update additional document. Please try again.");
         }
         setSubmitting(false);
     };
@@ -311,13 +316,21 @@ export default function EditAdditionalDocumentPage() {
                     <div className="space-y-4">
                         <h3 className="text-lg font-medium">Location Information</h3>
                         <div className="grid gap-2">
-                            <Label htmlFor="cur_loc">Current Location</Label>
+                            <Label htmlFor="cur_loc">
+                                Current Location
+                                {!canEditCurrentLocation && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                        (Read-only)
+                                    </span>
+                                )}
+                            </Label>
                             <Select
                                 key={`edit-dept-${editingDocument?.id || 'new'}`}
                                 value={formData.cur_loc || ""}
                                 onValueChange={(value) =>
                                     setFormData({ ...formData, cur_loc: value })
                                 }
+                                disabled={!canEditCurrentLocation}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select current location" />
@@ -346,6 +359,11 @@ export default function EditAdditionalDocumentPage() {
                                     </div>
                                 </SelectContent>
                             </Select>
+                            {!canEditCurrentLocation && (
+                                <p className="text-xs text-muted-foreground">
+                                    You don't have permission to edit the current location
+                                </p>
+                            )}
                         </div>
                     </div>
 

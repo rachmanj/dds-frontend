@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -22,10 +22,11 @@ import { AdditionalDocumentFormData } from "@/types/additional-document";
 import { useAdditionalDocuments } from "@/hooks/useAdditionalDocuments";
 import { useAdditionalDocumentTypes } from "@/hooks/useAdditionalDocumentTypes";
 import { useDepartments } from "@/hooks/useDepartments";
+import { usePermissions } from "@/contexts/PermissionContext";
 
 export default function CreateAdditionalDocumentPage() {
     const router = useRouter();
-    const { status } = useSession();
+    const { status, data: session } = useSession();
     const {
         createAdditionalDocument,
         isAuthenticated,
@@ -33,6 +34,8 @@ export default function CreateAdditionalDocumentPage() {
 
     const { additionalDocumentTypes } = useAdditionalDocumentTypes();
     const { departments } = useDepartments();
+
+    const { hasPermission } = usePermissions();
 
     const [formData, setFormData] = useState<AdditionalDocumentFormData>({
         type_id: 0,
@@ -82,14 +85,27 @@ export default function CreateAdditionalDocumentPage() {
         return `${department.project} - ${department.name} - ${department.location_code}`;
     };
 
+    // Set default cur_loc from user's department when session is available
+    useEffect(() => {
+        if (session?.user?.department?.location_code && !formData.cur_loc) {
+            setFormData(prev => ({
+                ...prev,
+                cur_loc: session.user.department!.location_code
+            }));
+        }
+    }, [session?.user?.department?.location_code, formData.cur_loc]);
+
+    // Permission check for editing current location
+    const canEditCurrentLocation = hasPermission("document.edit-cur_loc");
+
     const handleSubmit = async () => {
         setSubmitting(true);
-        const success = await createAdditionalDocument(formData);
-        if (success) {
+        const result = await createAdditionalDocument(formData);
+        if (result.success) {
             toast.success("Additional document created successfully!");
             router.push("/additional-documents");
         } else {
-            toast.error("Failed to create additional document. Please try again.");
+            toast.error(result.error || "Failed to create additional document. Please try again.");
         }
         setSubmitting(false);
     };
@@ -268,12 +284,20 @@ export default function CreateAdditionalDocumentPage() {
                     <div className="space-y-4">
                         <h3 className="text-lg font-medium">Location Information</h3>
                         <div className="grid gap-2">
-                            <Label htmlFor="cur_loc">Current Location</Label>
+                            <Label htmlFor="cur_loc">
+                                Current Location
+                                {!canEditCurrentLocation && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                        (Read-only)
+                                    </span>
+                                )}
+                            </Label>
                             <Select
                                 value={formData.cur_loc || ""}
                                 onValueChange={(value) =>
                                     setFormData({ ...formData, cur_loc: value })
                                 }
+                                disabled={!canEditCurrentLocation}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select current location" />

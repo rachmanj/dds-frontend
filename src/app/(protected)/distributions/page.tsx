@@ -39,6 +39,21 @@ import { distributionTypeService, distributionService } from '@/lib/api/distribu
 import { departmentService } from '@/lib/api/departments';
 import { getStatusColor, getStatusLabel } from '@/types/distribution';
 
+// Helper function to format date safely
+const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A';
+
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return 'Invalid Date';
+        }
+        return date.toLocaleDateString();
+    } catch (error) {
+        return 'Invalid Date';
+    }
+};
+
 export default function DistributionsPage() {
     const router = useRouter();
     const { data: session, status } = useSession();
@@ -405,7 +420,7 @@ export default function DistributionsPage() {
                                         </TableCell>
                                         <TableCell>{distribution.creator?.name}</TableCell>
                                         <TableCell>
-                                            {new Date(distribution.created_at).toLocaleDateString()}
+                                            {formatDate(distribution.created_at)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end space-x-2">
