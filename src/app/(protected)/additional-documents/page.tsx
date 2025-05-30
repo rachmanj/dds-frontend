@@ -42,6 +42,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     Plus,
     Edit,
@@ -53,21 +54,29 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
-    ChevronsRight
+    ChevronsRight,
+    Upload,
+    FileSpreadsheet,
+    CheckCircle,
+    XCircle,
+    Info
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { AdditionalDocument } from "@/types/additional-document";
 import { useAdditionalDocuments } from "@/hooks/useAdditionalDocuments";
 import { useDepartments } from "@/hooks/useDepartments";
+import { usePermissions } from "@/contexts/PermissionContext";
 
 export default function AdditionalDocumentsPage() {
     const router = useRouter();
     const { status } = useSession();
+    const { hasPermission } = usePermissions();
     const {
         additionalDocuments,
         loading,
         error,
         deleteAdditionalDocument,
+        importAdditionalDocuments,
         clearError,
         isAuthenticated,
     } = useAdditionalDocuments();
@@ -78,8 +87,18 @@ export default function AdditionalDocumentsPage() {
 
     const [globalFilter, setGlobalFilter] = useState("");
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
     const [deletingDocument, setDeletingDocument] = useState<AdditionalDocument | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [importFile, setImportFile] = useState<File | null>(null);
+    const [checkDuplicates, setCheckDuplicates] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [importResult, setImportResult] = useState<{
+        imported: number;
+        skipped: number;
+        total_processed: number;
+        errors: string[];
+    } | null>(null);
 
     // Helper function to get department display name
     const getDepartmentDisplayName = useCallback((locationCode: string) => {
@@ -111,6 +130,118 @@ export default function AdditionalDocumentsPage() {
     // Handle create - navigate to create page
     const handleCreate = () => {
         router.push("/additional-documents/create");
+    };
+
+    // Handle import dialog
+    const handleImportClick = () => {
+        setImportResult(null);
+        setImportFile(null);
+        setCheckDuplicates(false);
+        setIsImportDialogOpen(true);
+    };
+
+    // Handle file selection
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            // Validate file type
+            const allowedTypes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                'application/vnd.ms-excel', // .xls
+                'text/csv' // .csv
+            ];
+
+            if (!allowedTypes.includes(file.type)) {
+                toast.error("Please select a valid Excel (.xlsx, .xls) or CSV file.");
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error("File size must not exceed 10MB.");
+                return;
+            }
+
+            setImportFile(file);
+        }
+    };
+
+    // Handle import execution
+    const handleImport = async () => {
+        if (!importFile) {
+            toast.error("Please select a file to import.");
+            return;
+        }
+
+        setImporting(true);
+        try {
+            const result = await importAdditionalDocuments(importFile, checkDuplicates);
+
+            if (result.success && result.data) {
+                setImportResult(result.data);
+                toast.success(`Import completed! ${result.data.imported} documents imported successfully.`);
+
+                // Close dialog after a delay to show results
+                setTimeout(() => {
+                    setIsImportDialogOpen(false);
+                }, 3000);
+            } else {
+                toast.error(result.error || "Import failed. Please try again.");
+            }
+        } catch (error) {
+            console.error("Import error:", error);
+            toast.error("An unexpected error occurred during import.");
+        } finally {
+            setImporting(false);
+        }
+    };
+
+    // Download sample template
+    const downloadTemplate = () => {
+        const headers = [
+            'ito_no',
+            'ito_date',
+            'po_no',
+            'project',
+            'receive_date',
+            'ito_remarks',
+            'ito_created_by',
+            'grpo_no',
+            'origin_whs',
+            'destination_whs'
+        ];
+
+        const sampleData = [
+            'ITO-2024-001',
+            '2024-01-15',
+            'PO-2024-001',
+            'Project Alpha',
+            '2024-01-16',
+            'Sample ITO document',
+            'John Doe',
+            'GRPO-001',
+            'WH001',
+            'WH002'
+        ];
+
+        // Create CSV content
+        const csvContent = [
+            headers.join(','),
+            sampleData.join(',')
+        ].join('\n');
+
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'ito_import_template.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast.success("Template downloaded successfully!");
     };
 
     // Define table columns
@@ -319,10 +450,22 @@ export default function AdditionalDocumentsPage() {
                             Manage additional documents and their information
                         </p>
                     </div>
-                    <Button disabled={!isAuthenticated} onClick={handleCreate}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Document
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                        {hasPermission('documents.import') && (
+                            <Button
+                                variant="outline"
+                                disabled={!isAuthenticated}
+                                onClick={handleImportClick}
+                            >
+                                <Upload className="mr-2 h-4 w-4" />
+                                Import ITO
+                            </Button>
+                        )}
+                        <Button disabled={!isAuthenticated} onClick={handleCreate}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Document
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Search and Controls */}
@@ -519,6 +662,143 @@ export default function AdditionalDocumentsPage() {
                         >
                             {submitting ? "Deleting..." : "Delete Document"}
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Import Dialog */}
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <FileSpreadsheet className="h-5 w-5" />
+                            Import ITO Documents
+                        </DialogTitle>
+                        <DialogDescription>
+                            Upload an Excel file (.xlsx, .xls) or CSV file containing ITO document data.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {!importResult ? (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="import-file">Select File</Label>
+                                <Input
+                                    id="import-file"
+                                    type="file"
+                                    accept=".xlsx,.xls,.csv"
+                                    onChange={handleFileChange}
+                                    disabled={importing}
+                                />
+                                {importFile && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Selected: {importFile.name} ({(importFile.size / 1024 / 1024).toFixed(2)} MB)
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="check-duplicates"
+                                    checked={checkDuplicates}
+                                    onCheckedChange={(checked) => setCheckDuplicates(checked as boolean)}
+                                    disabled={importing}
+                                />
+                                <Label htmlFor="check-duplicates" className="text-sm">
+                                    Check for duplicates (skip existing documents)
+                                </Label>
+                            </div>
+
+                            <Alert>
+                                <Info className="h-4 w-4" />
+                                <AlertDescription>
+                                    <strong>Required columns:</strong> ito_no<br />
+                                    <strong>Optional columns:</strong> ito_date, po_no, project, receive_date, ito_remarks, ito_created_by, grpo_no, origin_whs, destination_whs
+                                </AlertDescription>
+                            </Alert>
+
+                            <Button
+                                variant="outline"
+                                onClick={downloadTemplate}
+                                className="w-full"
+                                disabled={importing}
+                            >
+                                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                                Download Template
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="text-center space-y-2">
+                                <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+                                <h3 className="text-lg font-semibold">Import Completed</h3>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span>Documents Imported:</span>
+                                    <Badge variant="default">{importResult.imported}</Badge>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Documents Skipped:</span>
+                                    <Badge variant="secondary">{importResult.skipped}</Badge>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Total Processed:</span>
+                                    <Badge variant="outline">{importResult.total_processed}</Badge>
+                                </div>
+                            </div>
+
+                            {importResult.errors.length > 0 && (
+                                <div className="space-y-2">
+                                    <h4 className="font-medium text-destructive">Errors:</h4>
+                                    <div className="max-h-32 overflow-y-auto space-y-1">
+                                        {importResult.errors.map((error, index) => (
+                                            <p key={index} className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                                                {error}
+                                            </p>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        {!importResult ? (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsImportDialogOpen(false)}
+                                    disabled={importing}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleImport}
+                                    disabled={!importFile || importing}
+                                >
+                                    {importing ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                            Importing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="mr-2 h-4 w-4" />
+                                            Import Documents
+                                        </>
+                                    )}
+                                </Button>
+                            </>
+                        ) : (
+                            <Button
+                                onClick={() => setIsImportDialogOpen(false)}
+                                className="w-full"
+                            >
+                                Close
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

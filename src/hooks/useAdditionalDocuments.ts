@@ -307,6 +307,87 @@ export function useAdditionalDocuments() {
   // Clear error
   const clearError = () => setError(null);
 
+  // Import additional documents from Excel file
+  const importAdditionalDocuments = async (
+    file: File,
+    checkDuplicates: boolean = false
+  ): Promise<{ success: boolean; data?: any; error?: string }> => {
+    if (status !== "authenticated") {
+      const errorMsg = "You must be logged in to import additional documents";
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    if (!session?.accessToken) {
+      const errorMsg = "No access token found. Please log in again.";
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("check_duplicates", checkDuplicates ? "1" : "0");
+
+      const response = await api.post(
+        "/api/additional-documents/import",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Refresh the documents list after successful import
+      await fetchAdditionalDocuments();
+
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: unknown) {
+      console.error("Error importing additional documents:", error);
+      let errorMessage = "Failed to import additional documents";
+
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: {
+            status?: number;
+            data?: {
+              message?: string;
+              errors?: Record<string, string[]>;
+            };
+          };
+        };
+
+        if (axiosError.response?.status === 401) {
+          errorMessage =
+            "Authentication required. Please refresh the page and try again.";
+        } else if (axiosError.response?.status === 403) {
+          errorMessage = "You do not have permission to import documents.";
+        } else if (axiosError.response?.status === 422) {
+          // Handle validation errors
+          const responseData = axiosError.response.data;
+          if (responseData?.errors) {
+            const errors = responseData.errors;
+            const firstError = Object.values(errors)[0];
+            errorMessage = Array.isArray(firstError)
+              ? firstError[0]
+              : String(firstError);
+          } else if (responseData?.message) {
+            errorMessage = responseData.message;
+          }
+        } else if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        }
+      }
+
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
   useEffect(() => {
     fetchAdditionalDocuments();
   }, [fetchAdditionalDocuments]);
@@ -319,6 +400,7 @@ export function useAdditionalDocuments() {
     createAdditionalDocument,
     updateAdditionalDocument,
     deleteAdditionalDocument,
+    importAdditionalDocuments,
     clearError,
     isAuthenticated: status === "authenticated" && !!session?.accessToken,
     sessionEstablished: status === "authenticated" && !!session?.accessToken,
