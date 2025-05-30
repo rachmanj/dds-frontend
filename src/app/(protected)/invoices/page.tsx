@@ -108,6 +108,23 @@ export default function InvoicesPage() {
     return `${day}-${month}-${year}`;
   }, []);
 
+  // Calculate days since received
+  const calculateDaysSinceReceived = useCallback((receiveDate: string) => {
+    if (!receiveDate) return null;
+
+    const receivedDate = new Date(receiveDate);
+    const today = new Date();
+
+    // Reset time to start of day for accurate day calculation
+    receivedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = today.getTime() - receivedDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  }, []);
+
   // Handle edit - navigate to edit page
   const handleEdit = useCallback((invoice: Invoice) => {
     router.push(`/invoices/${invoice.id}/edit`);
@@ -228,6 +245,46 @@ export default function InvoicesPage() {
         cell: ({ getValue }) => (getValue() as string) || "-",
       },
       {
+        id: "days_since_received",
+        header: "Days",
+        cell: ({ row }) => {
+          const receiveDate = row.original.receive_date;
+          const daysSince = calculateDaysSinceReceived(receiveDate);
+
+          if (daysSince === null) return "-";
+
+          // Color coding based on age
+          let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "default";
+          let textColor = "";
+
+          if (daysSince < 0) {
+            // Future date
+            badgeVariant = "outline";
+            textColor = "text-blue-600";
+          } else if (daysSince <= 7) {
+            // Recent (0-7 days)
+            badgeVariant = "default";
+            textColor = "text-green-600";
+          } else if (daysSince <= 30) {
+            // Medium age (8-30 days)
+            badgeVariant = "secondary";
+            textColor = "text-orange-600";
+          } else {
+            // Old (30+ days)
+            badgeVariant = "destructive";
+            textColor = "text-red-600";
+          }
+
+          return (
+            <div className="flex items-center space-x-1">
+              <Badge variant={badgeVariant} className={textColor}>
+                {daysSince < 0 ? `${Math.abs(daysSince)} days future` : `${daysSince} days`}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "creator.name",
         header: "Created By",
         cell: ({ row }) => {
@@ -258,7 +315,7 @@ export default function InvoicesPage() {
         ),
       },
     ],
-    [formatCurrency, formatDate, handleEdit]
+    [formatCurrency, formatDate, calculateDaysSinceReceived, handleEdit]
   );
 
   // Create table instance

@@ -30,6 +30,7 @@ import { useDepartments } from "@/hooks/useDepartments";
 import { useProjects } from "@/hooks/useProjects";
 import { usePermissions } from "@/contexts/PermissionContext";
 import { InvoiceAdditionalDocuments } from "@/components/InvoiceAdditionalDocuments";
+import InvoiceAttachments from "@/components/attachments/InvoiceAttachments";
 
 export default function EditInvoicePage() {
     const router = useRouter();
@@ -383,9 +384,10 @@ export default function EditInvoicePage() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="details">Invoice Details</TabsTrigger>
                     <TabsTrigger value="documents">Additional Documents</TabsTrigger>
+                    <TabsTrigger value="attachments">Attachments</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details">
@@ -795,6 +797,29 @@ export default function EditInvoicePage() {
                             invoiceId={editingInvoice.id}
                             invoiceNumber={editingInvoice.invoice_number}
                         />
+                    )}
+                </TabsContent>
+
+                <TabsContent value="attachments">
+                    {editingInvoice && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Invoice Attachments</CardTitle>
+                                <CardDescription>
+                                    Upload and manage file attachments for this invoice
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <InvoiceAttachments
+                                    invoiceId={editingInvoice.id}
+                                    invoiceNumber={editingInvoice.invoice_number}
+                                    readOnly={false}
+                                    maxHeight="500px"
+                                    showStats={true}
+                                    allowMultipleSelection={true}
+                                />
+                            </CardContent>
+                        </Card>
                     )}
                 </TabsContent>
             </Tabs>

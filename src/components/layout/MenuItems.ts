@@ -81,7 +81,7 @@ export const MenuItems: MenuGroup[] = [
         title: "View main dashboard with overview and statistics",
       },
       {
-        label: "List",
+        label: "Addocs List",
         href: "/additional-documents",
         icon: FileCheck2,
         title: "Manage and view all additional documents",
@@ -114,13 +114,13 @@ export const MenuItems: MenuGroup[] = [
         title: "Manage distribution types and priorities",
         permission: "distribution.types.view",
       },
-      {
-        label: "Workflow",
-        href: "/distributions/workflow",
-        icon: Send,
-        title: "Track distribution workflow and status",
-        permission: "distribution.workflow",
-      },
+      // {
+      //   label: "Workflow",
+      //   href: "/distributions/workflow",
+      //   icon: Send,
+      //   title: "Track distribution workflow and status",
+      //   permission: "distribution.workflow",
+      // },
     ],
   },
   {
