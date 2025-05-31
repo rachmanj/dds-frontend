@@ -13,6 +13,7 @@ import {
   Send,
   Package,
   Settings,
+  BarChart3,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -121,6 +122,36 @@ export const MenuItems: MenuGroup[] = [
       //   title: "Track distribution workflow and status",
       //   permission: "distribution.workflow",
       // },
+    ],
+  },
+  {
+    GroupLabel: "Reports",
+    permission: "reports.view",
+    items: [
+      {
+        label: "Invoices",
+        href: "/reports/invoices",
+        icon: BarChart3,
+        title:
+          "View comprehensive invoice reports with details, attachments, and distribution history",
+        permission: "reports.invoices.view",
+      },
+      {
+        label: "Additional Documents",
+        href: "/reports/additional-documents",
+        icon: BarChart3,
+        title:
+          "View additional document reports with parent invoices, attachments, and distribution timeline",
+        permission: "reports.documents.view",
+      },
+      {
+        label: "Distribution",
+        href: "/reports/distributions",
+        icon: BarChart3,
+        title:
+          "View distribution reports with attached documents and detailed action history",
+        permission: "reports.distributions.view",
+      },
     ],
   },
   {
