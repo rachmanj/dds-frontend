@@ -118,7 +118,6 @@ const Navbar = () => {
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem><User className='h-[1.2rem] w-[1.2rem] mr-2' /> Profile</DropdownMenuItem>
-                        <DropdownMenuItem><Settings className='h-[1.2rem] w-[1.2rem] mr-2' /> Settings</DropdownMenuItem>
                         <DropdownMenuItem variant='destructive' onClick={handleSignOut}><LogOut className='h-[1.2rem] w-[1.2rem] mr-2' /> Logout</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

@@ -5,6 +5,8 @@ export interface ReportFilters {
   search?: string;
   date_from?: string;
   date_to?: string;
+  receive_date_from?: string;
+  receive_date_to?: string;
   status?: string;
   supplier_id?: number;
   type_id?: number;

@@ -50,10 +50,17 @@ import {
     ChevronRight,
     ChevronsLeft,
     ChevronsRight,
+    Filter,
+    X,
+    Calendar,
+    RefreshCw,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
-import { InvoiceReport } from "@/lib/api/reports";
+import { InvoiceReport, ReportFilters } from "@/lib/api/reports";
 import { useReports } from "@/hooks/useReports";
+import { useSuppliers } from "@/hooks/useSuppliers";
+import { useInvoiceTypes } from "@/hooks/useInvoiceTypes";
+import { useUsers } from "@/hooks/useUsers";
 
 export default function InvoicesReportsPage() {
     const router = useRouter();
@@ -66,24 +73,120 @@ export default function InvoicesReportsPage() {
         fetchInvoicesReport,
     } = useReports();
 
+    // Additional hooks for filter data
+    const { suppliers } = useSuppliers();
+    const { invoiceTypes } = useInvoiceTypes();
+    const { users } = useUsers();
+
     const [invoices, setInvoices] = useState<InvoiceReport[]>([]);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [globalFilter, setGlobalFilter] = useState("");
 
-    const loadInvoices = useCallback(async () => {
-        const response = await fetchInvoicesReport({
-            per_page: 1000
+    // Filter states
+    const [filters, setFilters] = useState<ReportFilters>({
+        search: "",
+        date_from: "",
+        date_to: "",
+        receive_date_from: "",
+        receive_date_to: "",
+        supplier_id: undefined,
+        type_id: undefined,
+        created_by: undefined,
+        status: "",
+        per_page: 10,
+    });
+
+    // Filter panel visibility
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Available status options
+    const statusOptions = [
+        { value: "open", label: "Open" },
+        { value: "pending", label: "Pending" },
+        { value: "approved", label: "Approved" },
+        { value: "paid", label: "Paid" },
+        { value: "cancelled", label: "Cancelled" },
+    ];
+
+    const loadInvoices = useCallback(async (filterParams?: ReportFilters, page = 1) => {
+        const finalFilters = {
+            ...filters,
+            ...filterParams,
+            per_page: pageSize,
+        };
+
+        // Remove empty values
+        Object.keys(finalFilters).forEach(key => {
+            const value = finalFilters[key as keyof ReportFilters];
+            if (value === "" || value === undefined || value === null) {
+                delete finalFilters[key as keyof ReportFilters];
+            }
         });
+
+        const response = await fetchInvoicesReport(finalFilters);
 
         if (response && response.success) {
             setInvoices(response.data.data || []);
+            setTotalRecords(response.data.total || 0);
+            setCurrentPage(response.data.current_page || 1);
         }
-    }, [fetchInvoicesReport]);
+    }, [fetchInvoicesReport, filters, pageSize]);
 
     useEffect(() => {
         if (isAuthenticated) {
             loadInvoices();
         }
     }, [isAuthenticated, loadInvoices]);
+
+    // Handle filter changes
+    const handleFilterChange = useCallback((key: keyof ReportFilters, value: any) => {
+        setFilters(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    }, []);
+
+    // Apply filters
+    const applyFilters = useCallback(() => {
+        setCurrentPage(1);
+        loadInvoices(filters, 1);
+    }, [filters, loadInvoices]);
+
+    // Clear all filters
+    const clearFilters = useCallback(() => {
+        const clearedFilters: ReportFilters = {
+            search: "",
+            date_from: "",
+            date_to: "",
+            receive_date_from: "",
+            receive_date_to: "",
+            supplier_id: undefined,
+            type_id: undefined,
+            created_by: undefined,
+            status: "",
+            per_page: pageSize,
+        };
+        setFilters(clearedFilters);
+        setGlobalFilter("");
+        loadInvoices(clearedFilters, 1);
+    }, [loadInvoices, pageSize]);
+
+    // Check if any filters are active
+    const hasActiveFilters = useMemo(() => {
+        return !!(
+            filters.search ||
+            filters.date_from ||
+            filters.date_to ||
+            filters.receive_date_from ||
+            filters.receive_date_to ||
+            filters.supplier_id ||
+            filters.type_id ||
+            filters.created_by ||
+            filters.status
+        );
+    }, [filters]);
 
     // Helper functions for display
     const formatCurrency = useCallback((amount: number, currency: string) => {
@@ -116,22 +219,27 @@ export default function InvoicesReportsPage() {
         router.push(`/reports/invoices/${invoice.id}`);
     }, [router]);
 
+    // Handle page size change
+    const handlePageSizeChange = useCallback((newPageSize: number) => {
+        setPageSize(newPageSize);
+        setCurrentPage(1);
+        loadInvoices({ ...filters, per_page: newPageSize }, 1);
+    }, [filters, loadInvoices]);
+
     // Define table columns
     const columns = useMemo<ColumnDef<InvoiceReport>[]>(
         () => [
             {
                 id: "index",
                 header: "No.",
-                cell: ({ row, table }) => (
+                cell: ({ row }) => (
                     <Badge variant="secondary">
-                        {row.index +
-                            1 +
-                            table.getState().pagination.pageIndex *
-                            table.getState().pagination.pageSize}
+                        {row.index + 1 + (currentPage - 1) * pageSize}
                     </Badge>
                 ),
             },
             {
+                id: "invoice_number",
                 accessorKey: "invoice_number",
                 header: "Invoice Number",
                 cell: ({ getValue }) => (
@@ -139,6 +247,7 @@ export default function InvoicesReportsPage() {
                 ),
             },
             {
+                id: "supplier_name",
                 accessorKey: "supplier.name",
                 header: "Supplier",
                 cell: ({ row }) => {
@@ -153,6 +262,7 @@ export default function InvoicesReportsPage() {
                 },
             },
             {
+                id: "type_name",
                 accessorKey: "type.type_name",
                 header: "Type",
                 cell: ({ row }) => {
@@ -165,6 +275,7 @@ export default function InvoicesReportsPage() {
                 },
             },
             {
+                id: "invoice_date",
                 accessorKey: "invoice_date",
                 header: "Invoice Date",
                 cell: ({ getValue }) => {
@@ -173,6 +284,7 @@ export default function InvoicesReportsPage() {
                 },
             },
             {
+                id: "receive_date",
                 accessorKey: "receive_date",
                 header: "Receive Date",
                 cell: ({ getValue }) => {
@@ -181,6 +293,7 @@ export default function InvoicesReportsPage() {
                 },
             },
             {
+                id: "amount",
                 accessorKey: "amount",
                 header: "Amount",
                 cell: ({ row }) => {
@@ -196,6 +309,7 @@ export default function InvoicesReportsPage() {
                 },
             },
             {
+                id: "status",
                 accessorKey: "status",
                 header: "Status",
                 cell: ({ getValue }) => {
@@ -213,6 +327,7 @@ export default function InvoicesReportsPage() {
                 },
             },
             {
+                id: "creator_name",
                 accessorKey: "creator.name",
                 header: "Created By",
                 cell: ({ row }) => {
@@ -236,7 +351,7 @@ export default function InvoicesReportsPage() {
                 ),
             },
         ],
-        [formatCurrency, formatDate, handleViewDetails]
+        [formatCurrency, formatDate, handleViewDetails, currentPage, pageSize]
     );
 
     // Create table instance
@@ -252,9 +367,12 @@ export default function InvoicesReportsPage() {
         },
         onGlobalFilterChange: setGlobalFilter,
         globalFilterFn: "includesString",
+        manualPagination: true,
+        pageCount: Math.ceil(totalRecords / pageSize),
         initialState: {
             pagination: {
-                pageSize: 10,
+                pageSize: pageSize,
+                pageIndex: currentPage - 1,
             },
         },
     });
@@ -335,36 +453,230 @@ export default function InvoicesReportsPage() {
                     </div>
                 </div>
 
-                {/* Search and Controls */}
-                <div className="flex items-center justify-between space-x-2">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search invoices..."
-                            value={globalFilter ?? ""}
-                            onChange={(e) => setGlobalFilter(e.target.value)}
-                            className="pl-8"
-                        />
+                {/* Search and Filter Controls */}
+                <div className="flex flex-col space-y-4">
+                    <div className="flex items-center justify-between space-x-2">
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search invoices..."
+                                value={filters.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                className="pl-8"
+                            />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                variant={showFilters ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className="flex items-center gap-2"
+                            >
+                                <Filter className="h-4 w-4" />
+                                Filters
+                                {hasActiveFilters && (
+                                    <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
+                                        !
+                                    </Badge>
+                                )}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={applyFilters}
+                                disabled={loading}
+                                className="flex items-center gap-2"
+                            >
+                                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                Apply
+                            </Button>
+                            {hasActiveFilters && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={clearFilters}
+                                    className="flex items-center gap-2"
+                                >
+                                    <X className="h-4 w-4" />
+                                    Clear
+                                </Button>
+                            )}
+                            <div className="flex items-center space-x-2">
+                                <Label htmlFor="per-page" className="text-sm">
+                                    Show:
+                                </Label>
+                                <Select
+                                    value={pageSize.toString()}
+                                    onValueChange={(value) => handlePageSizeChange(Number(value))}
+                                >
+                                    <SelectTrigger className="w-20">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="5">5</SelectItem>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="25">25</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <Label htmlFor="per-page" className="text-sm">
-                            Show:
-                        </Label>
-                        <Select
-                            value={table.getState().pagination.pageSize.toString()}
-                            onValueChange={(value) => table.setPageSize(Number(value))}
-                        >
-                            <SelectTrigger className="w-20">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5</SelectItem>
-                                <SelectItem value="10">10</SelectItem>
-                                <SelectItem value="25">25</SelectItem>
-                                <SelectItem value="50">50</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+
+                    {/* Advanced Filters Panel */}
+                    {showFilters && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-lg">Advanced Filters</CardTitle>
+                                <CardDescription>
+                                    Filter invoices by date ranges, supplier, type, creator, and status
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {/* Date Filters */}
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium flex items-center gap-2">
+                                            <Calendar className="h-4 w-4" />
+                                            Invoice Date Range
+                                        </Label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <Label htmlFor="date_from" className="text-xs text-muted-foreground">From</Label>
+                                                <Input
+                                                    id="date_from"
+                                                    type="date"
+                                                    value={filters.date_from || ""}
+                                                    onChange={(e) => handleFilterChange('date_from', e.target.value)}
+                                                    className="text-sm"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="date_to" className="text-xs text-muted-foreground">To</Label>
+                                                <Input
+                                                    id="date_to"
+                                                    type="date"
+                                                    value={filters.date_to || ""}
+                                                    onChange={(e) => handleFilterChange('date_to', e.target.value)}
+                                                    className="text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium flex items-center gap-2">
+                                            <Calendar className="h-4 w-4" />
+                                            Receive Date Range
+                                        </Label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <Label htmlFor="receive_date_from" className="text-xs text-muted-foreground">From</Label>
+                                                <Input
+                                                    id="receive_date_from"
+                                                    type="date"
+                                                    value={filters.receive_date_from || ""}
+                                                    onChange={(e) => handleFilterChange('receive_date_from', e.target.value)}
+                                                    className="text-sm"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="receive_date_to" className="text-xs text-muted-foreground">To</Label>
+                                                <Input
+                                                    id="receive_date_to"
+                                                    type="date"
+                                                    value={filters.receive_date_to || ""}
+                                                    onChange={(e) => handleFilterChange('receive_date_to', e.target.value)}
+                                                    className="text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Supplier Filter */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="supplier" className="text-sm font-medium">Supplier</Label>
+                                        <Select
+                                            value={filters.supplier_id?.toString() || ""}
+                                            onValueChange={(value) => handleFilterChange('supplier_id', value ? parseInt(value) : undefined)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="All suppliers" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {suppliers.map((supplier) => (
+                                                    <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                                                        {supplier.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Type Filter */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="type" className="text-sm font-medium">Invoice Type</Label>
+                                        <Select
+                                            value={filters.type_id?.toString() || ""}
+                                            onValueChange={(value) => handleFilterChange('type_id', value ? parseInt(value) : undefined)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="All types" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {invoiceTypes.map((type) => (
+                                                    <SelectItem key={type.id} value={type.id.toString()}>
+                                                        {type.type_name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Creator Filter */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="creator" className="text-sm font-medium">Created By</Label>
+                                        <Select
+                                            value={filters.created_by?.toString() || ""}
+                                            onValueChange={(value) => handleFilterChange('created_by', value ? parseInt(value) : undefined)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="All creators" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {users.map((user) => (
+                                                    <SelectItem key={user.id} value={user.id.toString()}>
+                                                        {user.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Status Filter */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+                                        <Select
+                                            value={filters.status || ""}
+                                            onValueChange={(value) => handleFilterChange('status', value || "")}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="All statuses" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {statusOptions.map((status) => (
+                                                    <SelectItem key={status.value} value={status.value}>
+                                                        {status.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
 
@@ -374,22 +686,17 @@ export default function InvoicesReportsPage() {
                     <CardTitle className="flex items-center gap-2">
                         <BarChart3 className="h-5 w-5" />
                         Invoice Reports
+                        {hasActiveFilters && (
+                            <Badge variant="secondary" className="ml-2">
+                                Filtered
+                            </Badge>
+                        )}
                     </CardTitle>
                     <CardDescription>
                         Comprehensive invoice data with relationships and history.
-                        {table.getFilteredRowModel().rows.length > 0 && (
+                        {totalRecords > 0 && (
                             <span className="ml-2">
-                                Showing{" "}
-                                {table.getState().pagination.pageIndex *
-                                    table.getState().pagination.pageSize +
-                                    1}{" "}
-                                to{" "}
-                                {Math.min(
-                                    (table.getState().pagination.pageIndex + 1) *
-                                    table.getState().pagination.pageSize,
-                                    table.getFilteredRowModel().rows.length
-                                )}{" "}
-                                of {table.getFilteredRowModel().rows.length} invoices
+                                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} invoices
                             </span>
                         )}
                     </CardDescription>
@@ -397,13 +704,18 @@ export default function InvoicesReportsPage() {
                 <CardContent>
                     {loading ? (
                         <div className="space-y-3">
-                            {[...Array(10)].map((_, i) => (
+                            {[...Array(pageSize)].map((_, i) => (
                                 <div key={i} className="flex items-center space-x-4">
+                                    <Skeleton className="h-4 w-[50px]" />
                                     <Skeleton className="h-4 w-[150px]" />
+                                    <Skeleton className="h-4 w-[120px]" />
+                                    <Skeleton className="h-4 w-[100px]" />
+                                    <Skeleton className="h-4 w-[100px]" />
                                     <Skeleton className="h-4 w-[100px]" />
                                     <Skeleton className="h-4 w-[120px]" />
                                     <Skeleton className="h-4 w-[80px]" />
                                     <Skeleton className="h-4 w-[100px]" />
+                                    <Skeleton className="h-4 w-[60px]" />
                                 </div>
                             ))}
                         </div>
@@ -432,14 +744,32 @@ export default function InvoicesReportsPage() {
                                     ))}
                                 </TableHeader>
                                 <TableBody>
-                                    {table.getRowModel().rows?.length ? (
-                                        table.getRowModel().rows.map((row) => (
-                                            <TableRow key={row.id}>
-                                                {row.getVisibleCells().map((cell) => (
-                                                    <TableCell key={cell.id}>
+                                    {invoices.length > 0 ? (
+                                        invoices.map((invoice, index) => (
+                                            <TableRow key={invoice.id}>
+                                                {columns.map((column) => (
+                                                    <TableCell key={`${invoice.id}-${column.id}`}>
                                                         {flexRender(
-                                                            cell.column.columnDef.cell,
-                                                            cell.getContext()
+                                                            column.cell,
+                                                            {
+                                                                getValue: () => {
+                                                                    if ('accessorKey' in column && column.accessorKey) {
+                                                                        const keys = (column.accessorKey as string).split('.');
+                                                                        let value: any = invoice;
+                                                                        for (const key of keys) {
+                                                                            value = value?.[key];
+                                                                        }
+                                                                        return value;
+                                                                    }
+                                                                    return undefined;
+                                                                },
+                                                                row: {
+                                                                    index,
+                                                                    original: invoice,
+                                                                },
+                                                                column,
+                                                                table,
+                                                            } as any
                                                         )}
                                                     </TableCell>
                                                 ))}
@@ -451,8 +781,8 @@ export default function InvoicesReportsPage() {
                                                 colSpan={columns.length}
                                                 className="text-center py-8"
                                             >
-                                                {globalFilter
-                                                    ? "No invoices found matching your search."
+                                                {hasActiveFilters
+                                                    ? "No invoices found matching your filters."
                                                     : "No invoices found for reports."}
                                             </TableCell>
                                         </TableRow>
@@ -461,42 +791,56 @@ export default function InvoicesReportsPage() {
                             </Table>
 
                             {/* Pagination Controls */}
-                            {table.getPageCount() > 1 && (
+                            {Math.ceil(totalRecords / pageSize) > 1 && (
                                 <div className="flex items-center justify-between space-x-2 py-4">
                                     <div className="text-sm text-muted-foreground">
-                                        Page {table.getState().pagination.pageIndex + 1} of{" "}
-                                        {table.getPageCount()}
+                                        Page {currentPage} of {Math.ceil(totalRecords / pageSize)}
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => table.setPageIndex(0)}
-                                            disabled={!table.getCanPreviousPage()}
+                                            onClick={() => {
+                                                setCurrentPage(1);
+                                                loadInvoices(filters, 1);
+                                            }}
+                                            disabled={currentPage === 1 || loading}
                                         >
                                             <ChevronsLeft className="h-4 w-4" />
                                         </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => table.previousPage()}
-                                            disabled={!table.getCanPreviousPage()}
+                                            onClick={() => {
+                                                const newPage = currentPage - 1;
+                                                setCurrentPage(newPage);
+                                                loadInvoices(filters, newPage);
+                                            }}
+                                            disabled={currentPage === 1 || loading}
                                         >
                                             <ChevronLeft className="h-4 w-4" />
                                         </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => table.nextPage()}
-                                            disabled={!table.getCanNextPage()}
+                                            onClick={() => {
+                                                const newPage = currentPage + 1;
+                                                setCurrentPage(newPage);
+                                                loadInvoices(filters, newPage);
+                                            }}
+                                            disabled={currentPage === Math.ceil(totalRecords / pageSize) || loading}
                                         >
                                             <ChevronRight className="h-4 w-4" />
                                         </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                            disabled={!table.getCanNextPage()}
+                                            onClick={() => {
+                                                const lastPage = Math.ceil(totalRecords / pageSize);
+                                                setCurrentPage(lastPage);
+                                                loadInvoices(filters, lastPage);
+                                            }}
+                                            disabled={currentPage === Math.ceil(totalRecords / pageSize) || loading}
                                         >
                                             <ChevronsRight className="h-4 w-4" />
                                         </Button>
