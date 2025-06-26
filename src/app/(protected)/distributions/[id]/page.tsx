@@ -25,7 +25,7 @@ export default function DistributionDetailPage() {
     const router = useRouter();
     const params = useParams();
     const { data: session, status } = useSession();
-    const distributionId = parseInt(params.id as string);
+    const distributionId = parseInt(params?.id as string);
 
     const [distribution, setDistribution] = useState<Distribution | null>(null);
     const [history, setHistory] = useState<DistributionHistory[]>([]);

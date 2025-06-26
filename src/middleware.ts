@@ -14,7 +14,10 @@ export async function middleware(request: NextRequest) {
   );
 
   // Get the user's session token
-  const token = await getToken({ req: request });
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
   // If the route is protected and the user is not authenticated, redirect to login
   if (isProtectedRoute && !token) {

@@ -1,9 +1,17 @@
 import axios from "axios";
 import { getSession } from "next-auth/react";
 
-// Get backend URL from environment variable or use default
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+// TEMPORARY FIX: Hardcode the correct URL
+const BACKEND_URL = "http://localhost:3001";
+
+// Debug: Log the environment variable and final URL
+console.log("🔍 Environment Debug:");
+console.log("  NEXT_PUBLIC_BACKEND_URL:", process.env.NEXT_PUBLIC_BACKEND_URL);
+console.log("  Final BACKEND_URL (hardcoded):", BACKEND_URL);
+console.log(
+  "  All env vars:",
+  Object.keys(process.env).filter((key) => key.startsWith("NEXT_PUBLIC"))
+);
 
 // Create a custom axios instance with token-based authentication
 const api = axios.create({

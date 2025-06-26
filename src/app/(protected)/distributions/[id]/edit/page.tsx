@@ -23,7 +23,7 @@ export default function EditDistributionPage() {
     const router = useRouter();
     const params = useParams();
     const { data: session } = useSession();
-    const distributionId = parseInt(params.id as string);
+    const distributionId = parseInt(params?.id as string);
 
     const [distribution, setDistribution] = useState<Distribution | null>(null);
     const [distributionTypes, setDistributionTypes] = useState<DistributionType[]>([]);

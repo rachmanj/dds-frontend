@@ -27,7 +27,7 @@ import { usePermissions } from "@/contexts/PermissionContext";
 export default function EditAdditionalDocumentPage() {
     const router = useRouter();
     const params = useParams();
-    const documentId = params.id as string;
+    const documentId = params?.id as string;
     const { status } = useSession();
     const { hasPermission } = usePermissions();
     const {

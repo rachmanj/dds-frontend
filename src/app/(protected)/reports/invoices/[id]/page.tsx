@@ -16,7 +16,7 @@ export default function InvoiceDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const { status } = useSession();
-    const invoiceId = parseInt(params.id as string);
+    const invoiceId = parseInt(params?.id as string);
 
     const {
         loading,

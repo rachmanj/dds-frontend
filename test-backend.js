@@ -2,7 +2,7 @@ const axios = require("axios");
 
 // Backend URL
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 async function testBackendConnection() {
   console.log(`Testing connection to backend at: ${BACKEND_URL}`);
@@ -32,7 +32,7 @@ async function testBackendConnection() {
       ?.split("=")[1];
 
     const loginResponse = await axios.post(
-      `${BACKEND_URL}/api/login`,
+      `${BACKEND_URL}/api/token-login`,
       {
         email: "dadsdevteam@example.com",
         password: "dds2024",

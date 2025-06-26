@@ -16,7 +16,7 @@ export default function AdditionalDocumentDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const { status } = useSession();
-    const documentId = parseInt(params.id as string);
+    const documentId = parseInt(params?.id as string);
 
     const {
         loading,

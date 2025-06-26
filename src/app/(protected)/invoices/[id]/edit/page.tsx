@@ -35,7 +35,7 @@ import InvoiceAttachments from "@/components/attachments/InvoiceAttachments";
 export default function EditInvoicePage() {
     const router = useRouter();
     const params = useParams();
-    const invoiceId = params.id as string;
+    const invoiceId = params?.id as string;
     const { status } = useSession();
     const { hasPermission } = usePermissions();
     const {
@@ -737,7 +737,7 @@ export default function EditInvoicePage() {
                                         </Select>
                                         {!canEditCurrentLocation && (
                                             <p className="text-xs text-muted-foreground">
-                                                You don't have permission to edit the current location
+                                                You don&apos;t have permission to edit the current location
                                             </p>
                                         )}
                                     </div>

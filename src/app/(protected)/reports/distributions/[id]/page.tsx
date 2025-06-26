@@ -8,7 +8,7 @@ import { getDistributionDetails, DistributionReport } from '@/lib/api/reports';
 export default function DistributionDetailsPage() {
     const params = useParams();
     const router = useRouter();
-    const distributionId = parseInt(params.id as string);
+    const distributionId = parseInt(params?.id as string);
 
     const [distribution, setDistribution] = useState<DistributionReport | null>(null);
     const [loading, setLoading] = useState(true);

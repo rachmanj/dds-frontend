@@ -9,7 +9,8 @@ import {
     Check,
     X,
     Calendar,
-    User
+    User,
+    FileType
 } from 'lucide-react';
 import { AttachmentItemProps } from '@/types/attachment';
 import attachmentService from '@/services/attachmentService';
@@ -29,14 +30,27 @@ const AttachmentItem: React.FC<AttachmentItemProps> = ({
     const [editDescription, setEditDescription] = useState(attachment.description || '');
     const [isLoading, setIsLoading] = useState(false);
 
+    // Get file type category
+    const getFileTypeCategory = () => {
+        const fileType = attachmentService.getFileType(attachment.mime_type);
+        switch (fileType) {
+            case 'pdf':
+                return 'PDF Document';
+            case 'image':
+                return 'Image File';
+            default:
+                return 'Document';
+        }
+    };
+
     // Get file icon based on type
     const getFileIcon = () => {
         if (attachment.is_image) {
-            return <Image className="w-5 h-5 text-blue-500" />;
+            return <Image className="w-5 h-5 text-blue-500" aria-label="Image file" />;
         } else if (attachment.is_pdf) {
-            return <FileText className="w-5 h-5 text-red-500" />;
+            return <FileText className="w-5 h-5 text-red-500" aria-label="PDF file" />;
         }
-        return <FileText className="w-5 h-5 text-gray-500" />;
+        return <FileText className="w-5 h-5 text-gray-500" aria-label="Document file" />;
     };
 
     // Handle edit save
@@ -115,6 +129,17 @@ const AttachmentItem: React.FC<AttachmentItemProps> = ({
                 <p className="text-xs text-gray-500 text-center mb-2">
                     {attachment.formatted_file_size}
                 </p>
+
+                {/* Document Type Info */}
+                <div className="text-xs text-gray-600 text-center mb-2">
+                    <div className="flex items-center justify-center space-x-1">
+                        <FileType className="w-3 h-3" />
+                        <span>{getFileTypeCategory()}</span>
+                    </div>
+                    <div className="text-gray-500 mt-1">
+                        {formatDate(attachment.created_at)}
+                    </div>
+                </div>
 
                 {/* Description */}
                 {attachment.description && (
@@ -261,6 +286,10 @@ const AttachmentItem: React.FC<AttachmentItemProps> = ({
 
                     {/* Meta Info */}
                     <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                        <div className="flex items-center space-x-1">
+                            <FileType className="w-3 h-3" />
+                            <span>{getFileTypeCategory()}</span>
+                        </div>
                         <div className="flex items-center space-x-1">
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(attachment.created_at)}</span>

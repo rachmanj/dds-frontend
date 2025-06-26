@@ -4,7 +4,7 @@ import axios from "axios";
 
 // Create a separate axios instance for auth to avoid circular dependencies
 const authApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000",
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -56,8 +56,18 @@ const handler = NextAuth({
       },
     }),
   ],
+  // Add required secret for JWT token encryption
+  secret:
+    process.env.NEXTAUTH_SECRET ||
+    "your-super-secret-jwt-key-for-development-change-in-production",
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    secret:
+      process.env.NEXTAUTH_SECRET ||
+      "your-super-secret-jwt-key-for-development-change-in-production",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {

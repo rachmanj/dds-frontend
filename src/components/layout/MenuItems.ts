@@ -14,6 +14,9 @@ import {
   Package,
   Settings,
   BarChart3,
+  TrendingUp,
+  Activity,
+  PieChart,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -122,6 +125,34 @@ export const MenuItems: MenuGroup[] = [
       //   title: "Track distribution workflow and status",
       //   permission: "distribution.workflow",
       // },
+    ],
+  },
+  {
+    GroupLabel: "Analytics",
+    permission: "analytics.view",
+    items: [
+      {
+        label: "Dashboard",
+        href: "/analytics",
+        icon: TrendingUp,
+        title:
+          "View comprehensive analytics dashboard with performance metrics and trends",
+        permission: "analytics.dashboard.view",
+      },
+      {
+        label: "Performance",
+        href: "/analytics/performance",
+        icon: Activity,
+        title: "Monitor system performance and workflow metrics",
+        permission: "analytics.performance.view",
+      },
+      {
+        label: "Reports",
+        href: "/analytics/reports",
+        icon: PieChart,
+        title: "Generate and export detailed analytics reports",
+        permission: "analytics.reports.view",
+      },
     ],
   },
   {
