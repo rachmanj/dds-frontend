@@ -19,6 +19,14 @@ export interface AdditionalDocument {
   batch_no?: number;
   created_at?: string;
   updated_at?: string;
+  is_in_transit?: boolean;
+  active_distribution?: {
+    id: number;
+    distribution_number: string;
+    status: string;
+    origin_department?: string;
+    destination_department?: string;
+  };
   type?: {
     id: number;
     type_name: string;
